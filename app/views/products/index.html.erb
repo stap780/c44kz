@@ -81,7 +81,7 @@
         <td><%= product.pricepr %></td>
         <td><%= product.price %></td>
         <td><%= product.quantity %></td>
-        <td><%= product.image.truncate(25) if product.image != nil %></td>
+        <td class="row ml-0 mr-0"><% product.image.split(' ').each do |pict| %><div class="w-25"><img class="img-fluid img-thumbnail" src="<%= pict %>"></div><% end %></td>
         <td><%= product.weight %></td>
         <td><%= product.skubrand %></td>
         <td><% if product.url.present? %><%= link_to 'Товар у поставщика', product.url , target: 'blank' %><%end%></td>

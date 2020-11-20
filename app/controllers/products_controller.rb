@@ -9,7 +9,7 @@ class ProductsController < ApplicationController
       new_q = {}
       params[:q].each do |k,v|
         if k == 'quantity_in'
-          			    puts v
+          puts v
           if v == "0"
             value = 0
           end
@@ -30,7 +30,7 @@ class ProductsController < ApplicationController
     # puts @products.count
     if params['otchet_type'] == 'selected'
       Product.csv_param_selected( params['selected_products'])
-      new_file = "#{Rails.public_path}"+'/ins_c44kz_selected.csv'
+      new_file = "#{Rails.public_path}"+'/ins_detail_selected.csv'
       send_file new_file, :disposition => 'attachment'
     end
 
