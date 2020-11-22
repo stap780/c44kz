@@ -130,7 +130,7 @@ class Product < ApplicationRecord
   def self.open_file_vstrade
     puts 'обновляем из файла vstrade - '+Time.now.in_time_zone('Moscow').to_s
     file_url = "#{Rails.public_path}"+"/vstrade_full.html"
-    doc = Nokogiri::HTML(open(file_url, :read_timeout => 50))
+    doc = Nokogiri::HTML(open(Addressable::URI.parse(file_url).normalize, :read_timeout => 50))
     table = doc.css('table')[1]
     products_file = table.css('tr')
     products_file.each_with_index do |prf, index|
