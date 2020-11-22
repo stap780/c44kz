@@ -130,7 +130,7 @@ class Product < ApplicationRecord
   def self.open_file_vstrade
     puts 'обновляем из файла vstrade - '+Time.now.in_time_zone('Moscow').to_s
     file_url = "#{Rails.public_path}"+"/vstrade_full.html"
-    doc = Nokogiri::HTML(open(Addressable::URI.parse(file_url).normalize, :read_timeout => 50))
+    doc = Nokogiri::HTML(open(file_url, :read_timeout => 50))
     table = doc.css('table')[1]
     products_file = table.css('tr')
     products_file.each_with_index do |prf, index|
@@ -170,7 +170,8 @@ class Product < ApplicationRecord
 
     products = Product.where.not(sku2: [nil, ''])
     products.each do |pr|
-      pr_doc = Nokogiri::HTML(open(pr.url, :read_timeout => 50), nil, Encoding::UTF_8.to_s)
+      pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(pr.url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
+      # pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
       weight = pr_doc.css('.weight').text.gsub('Вес товара: ','').gsub('г','')
       pict_thumbs = pr_doc.css('.thumbnails-slidee .thumb img')
       picts = []
