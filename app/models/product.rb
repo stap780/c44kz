@@ -13,19 +13,6 @@ class Product < ApplicationRecord
 
   def self.get_file
     puts 'загружаем файл с остатками - '+Time.now.in_time_zone('Moscow').to_s
-    # 	    a = Mechanize.new
-    # 		a.get("https://order.al-style.kz/site/login")
-    # 		form = a.page.forms.first
-    # 		form['LoginForm[username]'] = "info@c44.kz"
-    # 		form['LoginForm[password]'] = "12345Test"
-    # 		form.submit
-    # 		page = a.get("https://order.al-style.kz")
-    		# link = page.link_with(:dom_class => "btn btn-default btn-xs btn-info")
-    		# url = "https://order.al-style.kz"+link.href
-    	    #
-    			# # filename = url.split('/').last
-    	    # # download_path = "#{Rails.public_path}"+"/"+filename
-    			# # puts filename
 
     	    url = "https://order.al-style.kz/export/Al-Style_price.xlsx"
 
@@ -35,7 +22,7 @@ class Product < ApplicationRecord
     	      puts 'sleep 0.5'
     	    else
     	      download_path = "#{Rails.public_path}"+'/ost.xlsx' #+Date.today.in_time_zone('Moscow').strftime("%d_%m_%Y").to_s+'.xlsx'
-    		  IO.copy_stream(download.file.path, download_path)
+    		    IO.copy_stream(download.file.path, download_path)
     	      Product.open_file(download_path)
     	    end
 
@@ -77,6 +64,36 @@ class Product < ApplicationRecord
     puts 'закончили загружаем файл с остатками - '+Time.now.in_time_zone('Moscow').to_s
   end
 
+  def self.get_file_vstrade
+    puts 'загружаем файл vstrade с остатками - '+Time.now.in_time_zone('Moscow').to_s
+    file = "#{Rails.public_path}"+'/vstrade_full.html'
+		check = File.file?(file)
+		if check.present?
+			File.delete(file)
+		end
+
+    a = Mechanize.new
+		a.get("https://www.vstrade.kz/")
+		form = a.page.form_with(:action => "/index.php?login=yes")
+		form['LoginForm[username]'] = "info@c44.kz"
+		form['LoginForm[password]'] = "87654321"
+		form.submit
+		page = a.get("https://www.vstrade.kz/")
+		url = "https://vstrade.kz/t/price.php"
+
+    download = RestClient::Request.execute(method: :get, url: url, raw_response: true)
+    unless download.code == 200
+      sleep 0.5
+      puts 'sleep 0.5'
+    else
+  		download_path = "#{Rails.public_path}"+"/vstrade_full.html"
+  		IO.copy_stream(download.file.path, download_path)
+      Product.open_file_vstrade
+    end
+
+    puts 'закончили загружаем файл vstrade с остатками - '+Time.now.in_time_zone('Moscow').to_s
+  end
+
   def self.open_file(file)
     puts 'обновляем из файла - '+Time.now.in_time_zone('Moscow').to_s
 		spreadsheet = open_spreadsheet(file)
@@ -86,41 +103,152 @@ class Product < ApplicationRecord
     else
       last_number = spreadsheet.last_row.to_i
     end
-	    (2..last_number).each do |i|
-  			row = Hash[[header, spreadsheet.row(i)].transpose]
+    (2..last_number).each do |i|
+			row = Hash[[header, spreadsheet.row(i)].transpose]
 
-  			sku = row["Код"]
-  			skubrand = row["Артикул"]
-  			title = row["Наименование"]
-  			sdesc = row["Полное наименование"]
-  			costprice = row["Цена дил."]
-  			price = row["Цена роз."]
-        quantity = row["Остаток"].to_s.gsub('>','') if row["Остаток"] != nil
-        if title.present?
-    			product = Product.find_by_sku(sku)
-    			if product.present?
-    				product.update_attributes(skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, quantity: quantity)
-    			else
-    				Product.create(sku: sku, skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, price: price, quantity: quantity)
-    			end
-        end
+			sku = row["Код"]
+			skubrand = row["Артикул"]
+			title = row["Наименование"]
+			sdesc = row["Полное наименование"]
+			costprice = row["Цена дил."]
+			price = row["Цена роз."]
+      quantity = row["Остаток"].to_s.gsub('>','') if row["Остаток"] != nil
+      if title.present?
+  			product = Product.find_by_sku(sku)
+  			if product.present?
+  				product.update_attributes(skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, quantity: quantity)
+  			else
+  				Product.create(sku: sku, skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, price: price, quantity: quantity)
+  			end
       end
+    end
 
 		puts 'конец обновляем из файла - '+Time.now.in_time_zone('Moscow').to_s
     Product.price_updates
   end
 
+  def self.open_file_vstrade
+    puts 'обновляем из файла vstrade - '+Time.now.in_time_zone('Moscow').to_s
+    file_url = "#{Rails.public_path}"+"/vstrade_full.html"
+    doc = Nokogiri::HTML(open(file_url, :read_timeout => 50))
+    table = doc.css('table')[1]
+    products_file = table.css('tr')
+    products_file.each_with_index do |prf, index|
+      if !prf.css('td')[1].nil? and prf.css('td')[1] != 'Наименование'
+  			sku2 = prf.css('td')[0].text
+        sku = sku2+"-2"
+  			skubrand = prf.css('td')[2].text
+  			title_file = prf.css('td')[1]
+        title = title_file.text
+        url = title_file.css('a')[0]['href'].gsub('http','https')
+  			costprice = prf.css('td')[3].text
+  			price = (costprice.to_i*1.10).round(-1)
+        quantity_file = prf.css('td')[4].text
+        if sku.present?
+    			product = Product.find_by_sku(sku)
+    			if product.present?
+            quantity = quantity_file.to_i+product.quantity.to_i
+    				product.update_attributes(sku2: sku2, skubrand: skubrand, title: title, price: price, costprice: costprice, quantity: quantity, url: url)
+    			else
+            quantity = quantity_file
+    				Product.create(sku: sku, sku2: sku2, skubrand: skubrand, title: title, costprice: costprice, price: price, quantity: quantity, url: url)
+    			end
+        end
+      end
+
+      break if index == 10 and Rails.env.development?
+
+    end
+
+		puts 'конец обновляем из файла vstrade - '+Time.now.in_time_zone('Moscow').to_s
+    Product.vstrade_get_image_desc
+    # Product.price_updates
+  end
+
+  def self.vstrade_get_image_desc
+    puts 'обновляем vstrade_get_image_desc - '+Time.now.in_time_zone('Moscow').to_s
+
+    products = Product.where.not(sku2: [nil, ''])
+    products.each do |pr|
+      pr_doc = Nokogiri::HTML(open(pr.url, :read_timeout => 50), nil, Encoding::UTF_8.to_s)
+      weight = pr_doc.css('.weight').text.gsub('Вес товара: ','').gsub('г','')
+      pict_thumbs = pr_doc.css('.thumbnails-slidee .thumb img')
+      picts = []
+      if pict_thumbs.size > 0
+        pict_thumbs.each do |p|
+          pl = "https://www.vstrade.kz/"+p['data-big-src'].to_s #.gsub('resizer2/13','resizer2/15')
+          picts.push(pl)
+        end
+      else
+        if pr_doc.css('.product-photo img').present?
+          pl = "https://www.vstrade.kz/"+pr_doc.css('.product-photo img')[0]['data-big-src'].to_s #.gsub('resizer2/13','resizer2/15')
+        else
+          pl = ''
+        end
+        picts.push(pl)
+      end
+      pict = picts.uniq.join(' ')
+      proper = []
+      proper_file = pr_doc.css('.tech-info-block .expand-content').inner_html.gsub('</dt>',':').gsub('</dd>',' --- ').gsub('<dt>','').gsub('<dd>','').gsub(/\n/,'')
+      clear_proper = Nokogiri::HTML(proper_file)
+      properties = clear_proper.text
+      properties.split('---').each do |prop|
+        if prop.include?(':') and prop.include?('Полное описание')
+          @desc = prop.gsub('Полное описание:','')
+        end
+        if prop.include?(':') and !prop.include?('Полное описание') and !prop.include?('Бренд')
+          proper.push(prop)
+        end
+      end
+      charact = proper.join(' --- ')
+
+      cat_array = []
+      pr_doc.css('.breadcrumbs-content a span').each do |c|
+        if c.text == 'Каталог'
+          cat_array.push('Vstrade')
+        else
+          cat_array.push(c.text)
+        end
+      end
+
+      cattitle = cat_array.join('/')
+      if !pr.desc.present?
+        desc = @desc
+      else
+        desc = pr.desc
+      end
+
+      puts "desc - "+desc
+      brand_file = pr_doc.css("meta[itemprop=brand]")[0]['content'] if pr_doc.css("meta[itemprop=brand]").present?
+      if !pr.brand.present?
+        brand = brand_file
+      else
+        brand = pr.brand
+      end
+
+      pr.update_attributes(desc: desc, charact: charact, weight: weight, image: pict, brand: brand, cattitle: cattitle )
+
+    end
+
+    puts 'конец обновляем vstrade_get_image_desc - '+Time.now.in_time_zone('Moscow').to_s
+  end
+
   def self.open_spreadsheet(file)
       if file.is_a? String
-        Roo::Excelx.new(file)
+        fyle_type = file.split('.').last
+        if fyle_type == 'csv'
+          Roo::CSV.new(file)
+        else
+          Roo::Excelx.new(file, file_warning: :ignore)
+        end
       else
-	    case File.extname(file.original_filename)
-	    when ".csv" then Roo::CSV.new(file.path)#csv_options: {col_sep: ";",encoding: "windows-1251:utf-8"})
-	    when ".xls" then Roo::Excel.new(file.path)
-	    when ".xlsx" then Roo::Excelx.new(file.path)
-	    when ".XLS" then Roo::Excel.new(file.path)
-	    else raise "Unknown file type: #{file.original_filename}"
-      end
+  	    case File.extname(file.original_filename)
+    	    when ".csv" then Roo::CSV.new(file.path)#csv_options: {col_sep: ";",encoding: "windows-1251:utf-8"})
+    	    when ".xls" then Roo::Excel.new(file.path)
+    	    when ".xlsx" then Roo::Excelx.new(file.path)
+    	    when ".XLS" then Roo::Excel.new(file.path)
+    	    else raise "Unknown file type: #{file.original_filename}"
+        end
 	    end
 	end
 
@@ -549,6 +677,5 @@ class Product < ApplicationRecord
     end
     puts 'finish insales_param'
   end
-
 
 end

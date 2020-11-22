@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   resources :products do
     collection do
       get :get_file
+      get :get_file_vstrade
       get :load_by_api
       get :edit_multiple
       put :update_multiple

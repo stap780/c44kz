@@ -1,15 +1,13 @@
-<div class="row mb-1">
-  <div class="col-2">
+<div class="row mb-2 mr-0 ml-0 align-items-center">
+  <div class="col-3">
     <h1>Параметры</h1>
-  </div>
-  <div class="col-1">
     <span class="align-middle">
       <small>Всего:
         <%= Property.all.size %></small>
     </span>
   </div>
-  <div class="col-4 row">
-    <div class="dropdown col-4">
+  <div class="col- mr-1">
+    <div class="dropdown">
       <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         Действия
       </a>
@@ -17,18 +15,19 @@
         <%= link_to 'Обновление параметров', set_all_properties_path, class: 'dropdown-item'%>
       </div>
     </div>
-    <div class="col-8">
-      <%= link_to "Редактировать", edit_multiple_properties_path, class: 'btn btn-secondary', id: 'edit_multiple_property', remote: true, data: { toggle: 'modal', 'target': '#modal-edit' } %>
-      <%= link_to 'Удаление', delete_selected_properties_path, class: 'btn btn-secondary', id: 'deleteAllproperty', remote: true%>
-    </div>
   </div>
-  <div class="col-5 row mb-3">
-    <%= search_form_for @search, html: {class: 'form-inline col-12'}  do |f|%>
+  <div class="col- mr-1">
+    <%= link_to '<span class="oi oi-pencil"></span>'.html_safe, edit_multiple_properties_path, class: 'btn btn-secondary', id: 'edit_multiple_property', remote: true, data: { toggle: 'modal', 'target': '#modal-edit' } %>
+    <%= link_to '<span class="oi oi-trash"></span>'.html_safe, delete_selected_properties_path, class: "btn btn-secondary", id: "deleteAllproperty", remote: true%>
+  </div>
+  <div class="col- ">
+    <%= search_form_for @search, html: {class: 'form-inline '}  do |f|%>
         <%= f.select :status_eq, [['Да', true], ['Нет', false]], { include_blank: false, prompt: 'Статус'}, class: "form-control input-sm"  %>
         <%= f.search_field :title_cont, placeholder: 'Название', class: "form-control input-sm"%>
       <div class="form-group ml-2">
-        <%= f.submit 'Поиск', class: 'btn btn-info' %>
-        <%= link_to 'Сбросить', properties_path, class: 'btn btn-outline-dark' %>
+        <%# f.submit 'Поиск', class: 'btn btn-info' %>
+        <%= button_tag(type: 'submit', :class => "btn btn-info") do %><span class="oi oi-magnifying-glass"></span><% end %>
+        <%= link_to '<span class="oi oi-reload"></span>'.html_safe, properties_path, class: 'btn btn-outline-dark' %>
       </div>
     <% end %>
   </div>

@@ -1,98 +1,116 @@
-<div class="row mb-1">
-  <div class="col-2">
+<div class="row mb-2 mr-0 ml-0 align-items-center">
+  <div class="col-3">
     <h1>Товары</h1>
+    <span class="align-middle">
+      <small>Всего:
+        <%= Product.product_all_size %></small>
+    </span>
+    <span class="align-middle">
+      <small>Отфильтровано:
+        <%=@products.count%></small>
+    </span>
+    <span class="align-middle">
+      <small>Больше 0:
+        <%= Product.product_qt_not_null_size %></small>
+    </span>
   </div>
-  <div class="col-3">
-    <span class="align-middle"><small>Всего: <%= Product.product_all_size %></small></span>
-    <span  class="align-middle"><small>Отфильтровано: <%=@products.count%></small></span>
-    <span  class="align-middle"><small>Больше 0: <%= Product.product_qt_not_null_size %></small></span>
-  </div>
-  <div class="col-2">
+  <div class="col- mr-1">
     <div class="dropdown">
-    <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-      Действия
-    </a>
-    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-      <%= link_to 'Загрузить остатки', get_file_products_path, class: 'dropdown-item'%>
-      <%= link_to 'Обновление по api', load_by_api_products_path, class: 'dropdown-item'%>
-      <%= link_to 'Обновление категорий', set_cattitle_products_path, class: 'dropdown-item'%>
-      <%= link_to 'Сформировать файл', csv_param_products_path, class: 'dropdown-item'%>
-      <%= link_to 'Актуал. парам. инсалес', insales_param_products_path, class: 'dropdown-item'%>
-    </div>
+      <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Действия
+      </a>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+        <%= link_to 'Загрузить остатки', get_file_products_path, class: 'dropdown-item'%>
+        <%= link_to 'Обновление по api', load_by_api_products_path, class: 'dropdown-item'%>
+        <%= link_to 'Обновление категорий', set_cattitle_products_path, class: 'dropdown-item'%>
+        <%= link_to 'Сформировать файл', csv_param_products_path, class: 'dropdown-item'%>
+        <%= link_to 'Актуал. парам. инсалес', insales_param_products_path, class: 'dropdown-item'%>
+        <%= link_to 'Загр ост Пост2', get_file_vstrade_products_path, class: 'dropdown-item'%>
+      </div>
     </div>
   </div>
-  <div class="col-3">
-    <%= link_to "Редактировать", edit_multiple_products_path, class: 'btn btn-secondary', id: 'edit_multiple', remote: true, data: { toggle: 'modal', 'target': '#modal-edit' } %>
-    <%= link_to 'Удаление', delete_selected_products_path, class: 'btn btn-secondary', id: 'deleteAll', remote: true%>
+  <div class="col- mr-1">
+    <%= link_to '<span class="oi oi-pencil"></span>'.html_safe, edit_multiple_products_path, class: 'btn btn-secondary', id: 'edit_multiple', remote: true, data: { toggle: 'modal', 'target': '#modal-edit' } %>
+    <%= link_to '<span class="oi oi-trash"></span>'.html_safe, delete_selected_products_path, class: 'btn btn-secondary', id: 'deleteAll', remote: true%>
   </div>
-</div>
-<div class="row mb-3">
-  <%= search_form_for @search, html: {class: 'form-inline col-12'}  do |f|%>
-      <%= f.search_field :sku_or_title_cont, placeholder: 'Артикул, Название', class: "form-control input-sm"%>
-      <%= f.collection_select :brand_eq, Product.select(:brand).uniq.order('brand ASC'), "brand", "brand", {include_blank: false, prompt: 'Брэнд'} , class: "form-control input-sm"  %>
-      <%= f.collection_select :cattitle_cont, Product.product_cat, "cattitle", "cattitle", {include_blank: false, prompt: 'Категория'} , class: "form-control input-sm"  %>
-      <%= f.select :barcode_present, [['Есть', 'true'],['Нет', 'false' ]], { include_blank: false, prompt: 'ШтрК'}, class: "form-control input-sm"  %>
-      <%= f.select :quantity_in, [['= 0', 0],['> 0', 1]], { include_blank: false, prompt: 'Кол-во'}, class: "form-control input-sm"  %>
+  <div class="col-">
+    <%= search_form_for @search, html: {class: 'form-inline'} do |f|%>
+    <%= f.search_field :sku_or_title_or_skubrand_cont, placeholder: 'Артикул, Название', class: "form-control input-sm"%>
+    <%= f.collection_select :brand_eq, Product.select(:brand).uniq.order('brand ASC'), "brand", "brand", {include_blank: false, prompt: 'Брэнд'} , class: "form-control input-sm" %>
+    <%= f.collection_select :cattitle_cont, Product.product_cat, "cattitle", "cattitle", {include_blank: false, prompt: 'Категория'} , class: "form-control input-sm" ,style:"max-width: 150px;" %>
+    <%= f.select :barcode_present, [['Есть', 'true'],['Нет', 'false' ]], { include_blank: false, prompt: 'ШтрК'}, class: "form-control input-sm" %>
+    <%= f.select :quantity_in, [['= 0', 0],['> 0', 1]], { include_blank: false, prompt: 'Кол-во'}, class: "form-control input-sm" %>
     <div class="form-group ml-2">
-      <%= f.submit 'Поиск', class: 'btn btn-info' %>
-      <%= link_to 'Сбросить',products_path, class: 'btn btn-outline-dark' %>
-      <%= link_to '<span class="oi oi-list"></span>'.html_safe, products_path(params.permit(:products).merge(selected_products: @products.pluck(:id), otchet_type: 'selected')), title: "Создать файл с выбранными товарами", class: 'btn btn-outline-dark'%>
-    </div>
-  <% end %>
+      <%# f.submit 'Поиск', class: 'btn btn-info ' %>
+    <%= button_tag(type: 'submit', :class => "btn btn-info") do %><span class="oi oi-magnifying-glass"></span><% end %>
+    <%= link_to '<span class="oi oi-reload"></span>'.html_safe, products_path, class: 'btn btn-outline-dark' %>
+    <%= link_to '<span class="oi oi-list"></span>'.html_safe, products_path(params.permit(:products).merge(selected_products: @products.pluck(:id), otchet_type: 'selected')), title: "Создать файл с выбранными товарами", class: 'btn btn-outline-dark'%>
+  </div>
+<% end %>
+</div>
 </div>
 <div class="table-responsive">
 <table class="table table-hover table-condensed table-sm">
-  <thead class="thead-light">
+<thead class="thead-light">
+  <tr>
+    <th><%= check_box_tag 'selectAll', value = 'selectAll'%></th>
+    <th>Артикул</th>
+    <th>Артикул2</th>
+    <th>Barcode</th>
+    <th>Бренд</th>
+    <th style="min-width:250px;">Наименование</th>
+    <th>КрОписание</th>
+    <th>Описание</th>
+    <th>Кат Назв</th>
+    <th>Параметры</th>
+    <th>ЗакЦена</th>
+    <th>Процент</th>
+    <th>Цена</th>
+    <th>Ост</th>
+    <th style="min-width:250px;">Карт</th>
+    <th>Вес</th>
+    <th>Skubrand</th>
+    <th>Url</th>
+    <th colspan="2"></th>
+  </tr>
+</thead>
+<tbody id="products_table">
+  <% @products.each do |product| %>
     <tr>
-      <th><%= check_box_tag 'selectAll', value = 'selectAll'%></th>
-      <th>Артикул</th>
-      <th>Barcode</th>
-      <th>Производитель</th>
-      <th>Наименование</th>
-      <th>КрОписание</th>
-      <th>Описание</th>
-      <th>Кат Назв</th>
-      <th>Параметры</th>
-      <th>ЗакЦена</th>
-      <th>Процент</th>
-      <th>Цена</th>
-      <th>Ост</th>
-      <th>Карт</th>
-      <th>Вес</th>
-      <th>Skubrand</th>
-      <th>Url</th>
-      <th colspan="2"></th>
+      <td><%=check_box_tag "product_ids[]", product.id%></td>
+      <td><%= link_to product.sku, edit_product_path(product) %></td>
+      <td><%= product.sku2 %></td>
+      <td><%= product.barcode %></td>
+      <td><%= product.brand %></td>
+      <td><%= product.title %></td>
+      <td><%= product.sdesc.truncate(25) if product.sdesc != nil %></td>
+      <td><%= product.desc.truncate(25) if product.desc != nil%></td>
+      <td><% if product.cat %>(<%= product.cat %>)<% end %> <%= product.cattitle %></td>
+      <td><%= product.charact.truncate(25) if product.charact != nil %></td>
+      <td><%= product.costprice %></td>
+      <td><%= product.pricepr %></td>
+      <td><%= product.price %></td>
+      <td><%= product.quantity %></td>
+      <td class="row ml-0 mr-0">
+        <% if product.image %><% product.image.split(' ').each do |pict| %>
+        <div class="w-25">
+          <img class="img-thumbnail" src="<%= pict %>">
+        </div>
+        <% end %><% end %>
+      </td>
+      <td><%= product.weight %></td>
+      <td><%= product.skubrand %></td>
+      <td>
+        <% if product.url.present? %><%= link_to 'Товар у поставщика', product.url , target: 'blank' %>
+        <%end%>
+      </td>
+      <td><%= link_to '<span class="oi oi-eye"></span>'.html_safe, product %></td>
+      <td><%= link_to '<span class="oi oi-trash"></span>'.html_safe, product, method: :delete, data: { confirm: 'Вы уверенны?' } %></td>
     </tr>
-  </thead>
-
-  <tbody id="products_table">
-    <% @products.each do |product| %>
-      <tr>
-        <td><%=check_box_tag "product_ids[]", product.id%></td>
-        <td><%= link_to product.sku, edit_product_path(product) %></td>
-        <td><%= product.barcode %></td>
-        <td><%= product.brand %></td>
-        <td><%= product.title %></td>
-        <td><%= product.sdesc.truncate(25) if product.sdesc != nil %></td>
-        <td><%= product.desc.truncate(25) if product.desc != nil%></td>
-        <td>(<%= product.cat %>) <%= product.cattitle %></td>
-        <td><%= product.charact.truncate(25) if product.charact != nil %></td>
-        <td><%= product.costprice %></td>
-        <td><%= product.pricepr %></td>
-        <td><%= product.price %></td>
-        <td><%= product.quantity %></td>
-        <td class="row ml-0 mr-0"><% product.image.split(' ').each do |pict| %><div class="w-25"><img class="img-fluid img-thumbnail" src="<%= pict %>"></div><% end %></td>
-        <td><%= product.weight %></td>
-        <td><%= product.skubrand %></td>
-        <td><% if product.url.present? %><%= link_to 'Товар у поставщика', product.url , target: 'blank' %><%end%></td>
-        <td><%= link_to '<span class="oi oi-eye"></span>'.html_safe, product %></td>
-        <td><%= link_to '<span class="oi oi-trash"></span>'.html_safe, product, method: :delete, data: { confirm: 'Вы уверенны?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
+  <% end %>
+</tbody>
 </table>
 </div>
-
 <div class="digg_pagination mt-4 mb-4">
-    <%= will_paginate @products %>
+<%= will_paginate @products %>
 </div>

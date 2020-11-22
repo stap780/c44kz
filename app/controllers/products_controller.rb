@@ -100,6 +100,16 @@ class ProductsController < ApplicationController
     redirect_to products_path
   end
 
+  def get_file_vstrade
+    if Rails.env.development?
+      Product.get_file_vstrade
+    else
+      Product.delay.get_file_vstrade
+    end
+    flash[:notice] = 'Задача обновления остатков Поставщик 2 запущена'
+    redirect_to products_path
+  end
+
   def edit_multiple
     puts params[:product_ids].present?
     if params[:product_ids].present?
@@ -198,6 +208,6 @@ class ProductsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:sku, :skubrand, :barcode, :brand, :title, :sdesc, :desc, :cat, :charact, :costprice, :price, :quantity, :image, :weight, :url, :cattitle, :pricepr, :otchet_type)
+      params.require(:product).permit(:sku, :sku2, :skubrand, :barcode, :brand, :title, :sdesc, :desc, :cat, :charact, :costprice, :price, :quantity, :image, :weight, :url, :cattitle, :pricepr, :otchet_type)
     end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20201019082841) do
+ActiveRecord::Schema.define(version: 20201121094732) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -50,6 +50,7 @@ ActiveRecord::Schema.define(version: 20201019082841) do
     t.string   "brand"
     t.string   "cattitle"
     t.integer  "pricepr"
+    t.string   "sku2"
   end
 
   create_table "properties", force: :cascade do |t|

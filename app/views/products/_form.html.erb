@@ -4,22 +4,30 @@
   <%= f.error_notification message: f.object.errors[:base].to_sentence if f.object.errors[:base].present? %>
 
   <div class="form-inputs row">
-    <%= f.input :title , wrapper_html: { class: "col-md-6" } %>
-    <%= f.input :sku  ,  wrapper_html: { class: "col-md-2" } %>
+    <%= f.input :title , wrapper_html: { class: "col-md-4" } %>
+    <%= f.input :sku, disabled: true,  wrapper_html: { class: "col-md-2" } %>
+    <%= f.input :sku2  ,  wrapper_html: { class: "col-md-2" } %>
     <%= f.input :skubrand , wrapper_html: { class: "col-md-2" } %>
     <%= f.input :barcode , wrapper_html: { class: "col-md-2" } %>
-    <%= f.input :sdesc , wrapper_html: { class: "col-md-12" } %>
+    <%= f.input :brand , wrapper_html: { class: "col-md-2" } %>
+    <%= f.input :sdesc , wrapper_html: { class: "col-md-10" } %>
     <%= f.input :desc , wrapper_html: { class: "col-md-12" } %>
-    <%= f.input :cat , wrapper_html: { class: "col-md-3" } %>
-    <%= f.input :cattitle, collection: Product.product_cat.map { |r| r.cattitle }, wrapper_html: { class: "col-md-9" } %>
-    <%= f.input :charact , wrapper_html: { class: "col-md-12" } %>
-    <%= f.input :costprice , wrapper_html: { class: "col-md-3" } %>
-    <%= f.input :price , wrapper_html: { class: "col-md-3" } %>
-    <%= f.input :quantity, wrapper_html: { class: "col-md-3" } %>
-    <%= f.input :weight , wrapper_html: { class: "col-md-3" } %>
-    <%= f.input :image , wrapper_html: { class: "col-md-12" } %>
-    <%= f.input :url , wrapper_html: { class: "col-md-12" } %>
+    <%= f.input :cat , wrapper_html: { class: "col-md-2" } %>
+    <%= f.input :cattitle, collection: Product.product_cat.map { |r| r.cattitle }, wrapper_html: { class: "col-md-3" } %>
+    <%= f.input :costprice , wrapper_html: { class: "col-md-2" } %>
+    <%= f.input :price , wrapper_html: { class: "col-md-2" } %>
+    <%= f.input :quantity, wrapper_html: { class: "col-md-1" } %>
+    <%= f.input :weight , wrapper_html: { class: "col-md-1" } %>
+    <%= f.input :charact , wrapper_html: { class: "col-md-9" } %>
+    <% if @product.url.present? %><%= link_to 'Товар у поставщика', @product.url , class: "d-flex align-items-center", target: 'blank' %><%end%>
   </div>
+  <% if @product.image.present? %>
+  <div class="row ml-0 mr-0">
+  <% @product.image.split(' ').each do |pict| %>
+  <div class="w-25"><img class="img-fluid img-thumbnail" src="<%= pict %>"></div>
+  <% end %>
+  </div>
+  <%end%>
 
   <div class="form-actions mt-4">
     <%= f.button :submit , class: "btn btn-outline-success" %>
