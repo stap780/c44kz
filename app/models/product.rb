@@ -170,6 +170,7 @@ class Product < ApplicationRecord
 
     products = Product.where.not(sku2: [nil, ''])
     products.each do |pr|
+      puts "pr id - "+pr.id.to_s
       pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(pr.url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
       # pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
       weight = pr_doc.css('.weight').text.gsub('Вес товара: ','').gsub('г','')
@@ -188,7 +189,7 @@ class Product < ApplicationRecord
         end
         picts.push(pl)
       end
-      pict = picts.uniq.join(' ')
+      pict_file = picts.uniq.join(' ')
       proper = []
       proper_file = pr_doc.css('.tech-info-block .expand-content').inner_html.gsub('</dt>',':').gsub('</dd>',' --- ').gsub('<dt>','').gsub('<dd>','').gsub(/\n/,'')
       clear_proper = Nokogiri::HTML(proper_file)
@@ -212,19 +213,31 @@ class Product < ApplicationRecord
         end
       end
 
-      cattitle = cat_array.join('/')
+      cattitle_file = cat_array.join('/')
       if !pr.desc.present?
         desc = @desc
       else
         desc = pr.desc
       end
 
-      puts "desc - "+desc
+      # puts "desc - "+desc
       brand_file = pr_doc.css("meta[itemprop=brand]")[0]['content'] if pr_doc.css("meta[itemprop=brand]").present?
       if !pr.brand.present?
         brand = brand_file
       else
         brand = pr.brand
+      end
+
+      if !pr.image.present?
+        image = pict_file
+      else
+        image = pr.image
+      end
+
+      if !pr.cattitle.present?
+        cattitle = cattitle_file
+      else
+        cattitle = pr.cattitle
       end
 
       pr.update_attributes(desc: desc, charact: charact, weight: weight, image: pict, brand: brand, cattitle: cattitle )
