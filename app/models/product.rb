@@ -246,7 +246,7 @@ class Product < ApplicationRecord
         charact = pr.charact
       end
 
-      pr.update_attributes(desc: desc, charact: charact, weight: weight, image: pict, brand: brand, cattitle: cattitle )
+      pr.update_attributes(desc: desc, charact: charact, image: pict, brand: brand, cattitle: cattitle )
 
     end
 
