@@ -178,12 +178,14 @@ class Product < ApplicationRecord
       picts = []
       if pict_thumbs.size > 0
         pict_thumbs.each do |p|
-          pl = "https://www.vstrade.kz/"+p['data-big-src'].to_s #.gsub('resizer2/13','resizer2/15')
-          picts.push(pl)
+          if !p['data-big-src'].include?('gif')
+            pl = "https://www.vstrade.kz/"+p['data-big-src'].to_s
+            picts.push(pl)
+          end
         end
       else
-        if pr_doc.css('.product-photo img').present?
-          pl = "https://www.vstrade.kz/"+pr_doc.css('.product-photo img')[0]['data-big-src'].to_s #.gsub('resizer2/13','resizer2/15')
+        if pr_doc.css('.product-photo img').present? and !pr_doc.css('.product-photo img')[0]['data-big-src'].include?('gif')
+          pl = "https://www.vstrade.kz/"+pr_doc.css('.product-photo img')[0]['data-big-src'].to_s
         else
           pl = ''
         end
