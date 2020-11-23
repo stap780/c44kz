@@ -202,7 +202,7 @@ class Product < ApplicationRecord
           proper.push(prop)
         end
       end
-      charact = proper.join(' --- ')
+      charact_file = proper.join(' --- ')
 
       cat_array = []
       pr_doc.css('.breadcrumbs-content a span').each do |c|
@@ -238,6 +238,12 @@ class Product < ApplicationRecord
         cattitle = cattitle_file
       else
         cattitle = pr.cattitle
+      end
+
+      if !pr.charact.present?
+        charact = charact_file
+      else
+        charact = pr.charact
       end
 
       pr.update_attributes(desc: desc, charact: charact, weight: weight, image: pict, brand: brand, cattitle: cattitle )
