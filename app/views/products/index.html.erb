@@ -39,7 +39,7 @@
     <%= f.collection_select :brand_eq, Product.select(:brand).uniq.order('brand ASC'), "brand", "brand", {include_blank: false, prompt: 'Брэнд'} , class: "form-control input-sm" , style: "max-width: 120px;"%>
     <%= f.collection_select :cattitle_cont, Product.product_cat, "cattitle", "cattitle", {include_blank: false, prompt: 'Категория'} , class: "form-control input-sm" ,style:"max-width: 140px;" %>
     <%= f.select :barcode_present, [['Есть', 'true'],['Нет', 'false' ]], { include_blank: false, prompt: 'ШтрК'}, class: "form-control input-sm" %>
-    <%= f.select :sku2_present, [['Поставщик1', 'false' ],['Поставщик2', 'true']], { include_blank: false, prompt: 'Пост'}, class: "form-control input-sm" %>
+    <%= f.select :sku2_present, [['Al-style', 'false' ],['Vstrade', 'true']], { include_blank: false, prompt: 'Пост'}, class: "form-control input-sm" %>
     <%= f.select :quantity_in, [['= 0', 0],['> 0', 1]], { include_blank: false, prompt: 'Кол-во'}, class: "form-control input-sm" %>
     <div class="form-group ml-2">
       <%# f.submit 'Поиск', class: 'btn btn-info ' %>
