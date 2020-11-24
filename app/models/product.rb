@@ -171,7 +171,8 @@ class Product < ApplicationRecord
     products = Product.where.not(sku2: [nil, '']).where(image: [nil, ''])
     products.each do |pr|
       puts "pr id - "+pr.id.to_s
-      RestClient.get( Addressable::URI.parse(pr.url).normalize) { |response, request, result, &block|
+      pr_url = Addressable::URI.parse(pr.url).normaliz
+      RestClient.get( pr_url) { |response, request, result, &block|
           case response.code
           when 200
             Product.vstrade_get_image_desc_by_product(pr.id)
