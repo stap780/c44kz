@@ -1,5 +1,5 @@
 <div class="row mb-2 mr-0 ml-0 align-items-center">
-  <div class="col-2">
+  <div class="col-2 pl-0">
     <h1>Товары</h1>
     <span class="align-middle">
       <small>Всего:
@@ -33,13 +33,13 @@
     <%= link_to '<span class="oi oi-pencil"></span>'.html_safe, edit_multiple_products_path, class: 'btn btn-secondary', id: 'edit_multiple', remote: true, data: { toggle: 'modal', 'target': '#modal-edit' } %>
     <%= link_to '<span class="oi oi-trash"></span>'.html_safe, delete_selected_products_path, class: 'btn btn-secondary', id: 'deleteAll', remote: true%>
   </div>
-  <div class="col-">
+  <div class="col- pl-0 pr-0">
     <%= search_form_for @search, html: {class: 'form-inline'} do |f|%>
     <%= f.search_field :sku_or_title_or_skubrand_cont, placeholder: 'Артикул, Название', class: "form-control input-sm"%>
-    <%= f.collection_select :brand_eq, Product.select(:brand).uniq.order('brand ASC'), "brand", "brand", {include_blank: false, prompt: 'Брэнд'} , class: "form-control input-sm" , style: "max-width: 150px;"%>
-    <%= f.collection_select :cattitle_cont, Product.product_cat, "cattitle", "cattitle", {include_blank: false, prompt: 'Категория'} , class: "form-control input-sm" ,style:"max-width: 150px;" %>
+    <%= f.collection_select :brand_eq, Product.select(:brand).uniq.order('brand ASC'), "brand", "brand", {include_blank: false, prompt: 'Брэнд'} , class: "form-control input-sm" , style: "max-width: 120px;"%>
+    <%= f.collection_select :cattitle_cont, Product.product_cat, "cattitle", "cattitle", {include_blank: false, prompt: 'Категория'} , class: "form-control input-sm" ,style:"max-width: 140px;" %>
     <%= f.select :barcode_present, [['Есть', 'true'],['Нет', 'false' ]], { include_blank: false, prompt: 'ШтрК'}, class: "form-control input-sm" %>
-    <%= f.select :sku2_present, [['Поставщик1', 'false' ],['Поставщик2', 'true']], { include_blank: false, prompt: ''}, class: "form-control input-sm" %>
+    <%= f.select :sku2_present, [['Поставщик1', 'false' ],['Поставщик2', 'true']], { include_blank: false, prompt: 'Пост'}, class: "form-control input-sm" %>
     <%= f.select :quantity_in, [['= 0', 0],['> 0', 1]], { include_blank: false, prompt: 'Кол-во'}, class: "form-control input-sm" %>
     <div class="form-group ml-2">
       <%# f.submit 'Поиск', class: 'btn btn-info ' %>
