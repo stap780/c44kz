@@ -168,100 +168,123 @@ class Product < ApplicationRecord
   def self.vstrade_get_image_desc
     puts 'обновляем vstrade_get_image_desc - '+Time.now.in_time_zone('Moscow').to_s
 
-    products = Product.where.not(sku2: [nil, ''])
+    products = Product.where.not(sku2: [nil, '']).where(image: [nil, ''])
     products.each do |pr|
       puts "pr id - "+pr.id.to_s
-      pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(pr.url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
-      # pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
-      weight = pr_doc.css('.weight').text.gsub('Вес товара: ','').gsub('г','')
-      pict_thumbs = pr_doc.css('.thumbnails-slidee .thumb img')
-      picts = []
-      if pict_thumbs.size > 0
-        pict_thumbs.each do |p|
-          if !p['data-big-src'].include?('gif')
-            pl = "https://www.vstrade.kz/"+p['data-big-src'].to_s
-            picts.push(pl)
+      RestClient.get( Addressable::URI.parse(pr.url).normalize) { |response, request, result, &block|
+          case response.code
+          when 200
+            Product.vstrade_get_image_desc_by_product(pr.id)
+          when 422
+            puts "error 422 - обновляем vstrade_get_image_desc"
+            puts response
+            break
+          when 403
+            puts 'error 403 - обновляем vstrade_get_image_desc'
+            break
+          when 404
+            puts 'error 404 - обновляем vstrade_get_image_desc'
+            break
+          when 503
+            sleep 1
+            puts 'sleep 1 error 503'
+          else
+            response.return!(&block)
           end
-        end
-      else
-        if pr_doc.css('.product-photo img').present? and !pr_doc.css('.product-photo img')[0]['data-big-src'].include?('gif')
-          pl = "https://www.vstrade.kz/"+pr_doc.css('.product-photo img')[0]['data-big-src'].to_s
-        else
-          pl = ''
-        end
-        picts.push(pl)
-      end
-      pict_file = picts.uniq.join(' ')
-      proper = []
-      proper_file = pr_doc.css('.tech-info-block .expand-content').inner_html.gsub('</dt>',':').gsub('</dd>',' --- ').gsub('<dt>','').gsub('<dd>','')
-      clear_proper = Nokogiri::HTML(proper_file)
-      properties = clear_proper.text
-      properties.split('---').each do |prop|
-        if prop.include?(':') and prop.include?('Полное описание')
-          @desc = prop.gsub('Полное описание:','').squish
-        end
-        if prop.include?(':') and prop.include?('Штрих код')
-          @barcode = prop.gsub('Штрих код:','').squish
-        end
-        if prop.include?(':') and !prop.include?('Полное описание') and !prop.include?('Бренд') and !prop.include?('Штрих код')
-          proper.push(prop.squish)
-        end
-      end
-      charact_file = proper.join(' --- ')
-
-      cat_array = []
-      pr_doc.css('.breadcrumbs-content a span').each do |c|
-        if c.text == 'Каталог'
-          cat_array.push('Vstrade')
-        else
-          cat_array.push(c.text)
-        end
-      end
-
-      cattitle_file = cat_array.join('/')
-      if !pr.desc.present?
-        desc = @desc
-      else
-        desc = pr.desc
-      end
-
-      # puts "desc - "+desc
-      brand_file = pr_doc.css("meta[itemprop=brand]")[0]['content'] if pr_doc.css("meta[itemprop=brand]").present?
-      if !pr.brand.present?
-        brand = brand_file
-      else
-        brand = pr.brand
-      end
-
-      if !pr.image.present?
-        image = pict_file
-      else
-        image = pr.image
-      end
-
-      if !pr.cattitle.present?
-        cattitle = cattitle_file
-      else
-        cattitle = pr.cattitle
-      end
-
-      if !pr.charact.present?
-        charact = charact_file
-      else
-        charact = pr.charact
-      end
-
-      if !pr.barcode.present?
-        barcode = @barcode
-      else
-        barcode = pr.barcode
-      end
-
-      pr.update_attributes(desc: desc, charact: charact, image: image, brand: brand, cattitle: cattitle, barcode: barcode )
-
+          }
     end
 
     puts 'конец обновляем vstrade_get_image_desc - '+Time.now.in_time_zone('Moscow').to_s
+  end
+
+  def self.vstrade_get_image_desc_by_product(pr_id)
+    pr = Product.find_by_id(pr_id)
+    pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(pr.url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
+    # pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
+    weight = pr_doc.css('.weight').text.gsub('Вес товара: ','').gsub('г','')
+    pict_thumbs = pr_doc.css('.thumbnails-slidee .thumb img')
+    picts = []
+    if pict_thumbs.size > 0
+      pict_thumbs.each do |p|
+        if !p['data-big-src'].include?('gif')
+          pl = "https://www.vstrade.kz/"+p['data-big-src'].to_s
+          picts.push(pl)
+        end
+      end
+    else
+      if pr_doc.css('.product-photo img').present? and !pr_doc.css('.product-photo img')[0]['data-big-src'].include?('gif')
+        pl = "https://www.vstrade.kz/"+pr_doc.css('.product-photo img')[0]['data-big-src'].to_s
+      else
+        pl = ''
+      end
+      picts.push(pl)
+    end
+    pict_file = picts.uniq.join(' ')
+    proper = []
+    proper_file = pr_doc.css('.tech-info-block .expand-content').inner_html.gsub('</dt>',':').gsub('</dd>',' --- ').gsub('<dt>','').gsub('<dd>','')
+    clear_proper = Nokogiri::HTML(proper_file)
+    properties = clear_proper.text
+    properties.split('---').each do |prop|
+      if prop.include?(':') and prop.include?('Полное описание')
+        @desc = prop.gsub('Полное описание:','').squish
+      end
+      if prop.include?(':') and prop.include?('Штрих код')
+        @barcode = prop.gsub('Штрих код:','').squish
+      end
+      if prop.include?(':') and !prop.include?('Полное описание') and !prop.include?('Бренд') and !prop.include?('Штрих код')
+        proper.push(prop.squish)
+      end
+    end
+    charact_file = proper.join(' --- ')
+
+    cat_array = []
+    pr_doc.css('.breadcrumbs-content a span').each do |c|
+      if c.text == 'Каталог'
+        cat_array.push('Vstrade')
+      else
+        cat_array.push(c.text)
+      end
+    end
+
+    cattitle_file = cat_array.join('/')
+    if !pr.desc.present?
+      desc = @desc
+    else
+      desc = pr.desc
+    end
+
+    brand_file = pr_doc.css("meta[itemprop=brand]")[0]['content'] if pr_doc.css("meta[itemprop=brand]").present?
+    if !pr.brand.present?
+      brand = brand_file
+    else
+      brand = pr.brand
+    end
+
+    if !pr.image.present?
+      image = pict_file
+    else
+      image = pr.image
+    end
+
+    if !pr.cattitle.present?
+      cattitle = cattitle_file
+    else
+      cattitle = pr.cattitle
+    end
+
+    if !pr.charact.present?
+      charact = charact_file
+    else
+      charact = pr.charact
+    end
+
+    if !pr.barcode.present?
+      barcode = @barcode
+    else
+      barcode = pr.barcode
+    end
+
+    pr.update_attributes(desc: desc, charact: charact, image: image, brand: brand, cattitle: cattitle, barcode: barcode )
   end
 
   def self.open_spreadsheet(file)
