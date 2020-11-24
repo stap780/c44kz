@@ -12,6 +12,8 @@
 //
 // = require jquery
 // = require jquery_ujs
+//= require best_in_place.purr
+//= require best_in_place
 // = require popper
 // = require bootstrap
 //= require_tree .
@@ -19,6 +21,7 @@
 
 
 $(document).ready(function() {
+  $(".best_in_place").best_in_place();
 
   $(".alert").delay(4000).slideUp(200, function() {
     $(this).alert('close');

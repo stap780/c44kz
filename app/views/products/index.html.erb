@@ -39,6 +39,7 @@
     <%= f.collection_select :brand_eq, Product.select(:brand).uniq.order('brand ASC'), "brand", "brand", {include_blank: false, prompt: 'Брэнд'} , class: "form-control input-sm" %>
     <%= f.collection_select :cattitle_cont, Product.product_cat, "cattitle", "cattitle", {include_blank: false, prompt: 'Категория'} , class: "form-control input-sm" ,style:"max-width: 150px;" %>
     <%= f.select :barcode_present, [['Есть', 'true'],['Нет', 'false' ]], { include_blank: false, prompt: 'ШтрК'}, class: "form-control input-sm" %>
+    <%= f.select :sku2_present, [['Поставщик1', 'false' ],['Поставщик2', 'true']], { include_blank: false, prompt: ''}, class: "form-control input-sm" %>
     <%= f.select :quantity_in, [['= 0', 0],['> 0', 1]], { include_blank: false, prompt: 'Кол-во'}, class: "form-control input-sm" %>
     <div class="form-group ml-2">
       <%# f.submit 'Поиск', class: 'btn btn-info ' %>
@@ -56,22 +57,23 @@
     <th><%= check_box_tag 'selectAll', value = 'selectAll'%></th>
     <th>Артикул</th>
     <th>Артикул2</th>
+    <th style="min-width:250px;">Наименование</th>
+    <th>КрОпис</th>
+    <th>Опис</th>
+    <th>Категория</th>
+    <th>Параметры</th>
+    <th>ЗЦ1</th>
+    <th>ЗЦ2</th>
+    <th>%</th>
+    <th>ЦПр</th>
+    <th>ОстОбщ</th>
+    <th style="min-width:250px;">Карт</th>
     <th>Barcode</th>
     <th>Бренд</th>
-    <th style="min-width:250px;">Наименование</th>
-    <th>КрОписание</th>
-    <th>Описание</th>
-    <th>Кат Назв</th>
-    <th>Параметры</th>
-    <th>ЗакЦена</th>
-    <th>Процент</th>
-    <th>Цена</th>
-    <th>Ост</th>
-    <th style="min-width:250px;">Карт</th>
     <th>Вес</th>
-    <th>Skubrand</th>
+    <th>АртПр</th>
     <th>Url</th>
-    <th colspan="2"></th>
+    <th colspan="1"></th>
   </tr>
 </thead>
 <tbody id="products_table">
@@ -79,18 +81,17 @@
     <tr>
       <td><%=check_box_tag "product_ids[]", product.id%></td>
       <td><%= link_to product.sku, edit_product_path(product) %></td>
-      <td><%= product.sku2 %></td>
-      <td><%= product.barcode %></td>
-      <td><%= product.brand %></td>
+      <td><%= best_in_place product, :sku2 %></td>
       <td><%= product.title %></td>
       <td><%= product.sdesc.truncate(25) if product.sdesc != nil %></td>
-      <td><%= product.desc.truncate(25) if product.desc != nil%></td>
+      <td class="text-center"><% if product.desc.present? %><span class="oi oi-check"></span><% end %></td>
       <td><% if product.cat %>(<%= product.cat %>)<% end %> <%= product.cattitle %></td>
       <td><%= product.charact.truncate(25) if product.charact != nil %></td>
-      <td><%= product.costprice %></td>
+      <td><%= best_in_place product, :costprice %></td>
+      <td><%= product.costprice2 %></td>
       <td><%= product.pricepr %></td>
       <td><%= product.price %></td>
-      <td><%= product.quantity %></td>
+      <td class="text-center"><%= product.quantity %></td>
       <td class="row ml-0 mr-0">
         <% if product.image %><% product.image.split(' ').each do |pict| %>
         <div class="w-25">
@@ -98,13 +99,14 @@
         </div>
         <% end %><% end %>
       </td>
+      <td><%= product.barcode %></td>
+      <td><%= product.brand %></td>
       <td><%= product.weight %></td>
       <td><%= product.skubrand %></td>
       <td>
         <% if product.url.present? %><%= link_to 'Товар у поставщика', product.url , target: 'blank' %>
         <%end%>
       </td>
-      <td><%= link_to '<span class="oi oi-eye"></span>'.html_safe, product %></td>
       <td><%= link_to '<span class="oi oi-trash"></span>'.html_safe, product, method: :delete, data: { confirm: 'Вы уверенны?' } %></td>
     </tr>
   <% end %>

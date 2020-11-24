@@ -47,6 +47,9 @@ GEM
       execjs
     bcrypt (3.1.16)
     bcrypt_pbkdf (1.0.1)
+    best_in_place (3.1.1)
+      actionpack (>= 3.2)
+      railties (>= 3.2)
     better_errors (2.9.1)
       coderay (>= 1.0.0)
       erubi (>= 1.0.0)
@@ -300,6 +303,7 @@ PLATFORMS
 DEPENDENCIES
   addressable (~> 2.4)
   bcrypt_pbkdf (< 2.0)
+  best_in_place
   better_errors
   bootstrap
   byebug

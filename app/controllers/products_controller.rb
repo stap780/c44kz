@@ -30,7 +30,7 @@ class ProductsController < ApplicationController
     # puts @products.count
     if params['otchet_type'] == 'selected'
       Product.csv_param_selected( params['selected_products'])
-      new_file = "#{Rails.public_path}"+'/ins_detail_selected.csv'
+      new_file = "#{Rails.public_path}"+'/ins_c44kz_selected.csv'
       send_file new_file, :disposition => 'attachment'
     end
 
@@ -145,7 +145,7 @@ class ProductsController < ApplicationController
 			end
 		end
 		flash[:notice] = 'Данные обновлены'
-		redirect_to :back
+		redirect_back(fallback_location: index)
   end
 
   def delete_selected
@@ -208,6 +208,6 @@ class ProductsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:sku, :sku2, :skubrand, :barcode, :brand, :title, :sdesc, :desc, :cat, :charact, :costprice, :price, :quantity, :image, :weight, :url, :cattitle, :pricepr, :otchet_type)
+      params.require(:product).permit(:sku, :sku2, :skubrand, :barcode, :brand, :title, :sdesc, :desc, :cat, :charact, :costprice, :costprice2, :price, :quantity, :quantity1, :quantity2, :image, :weight, :url, :cattitle, :pricepr, :otchet_type)
     end
 end

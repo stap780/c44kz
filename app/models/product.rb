@@ -7,6 +7,7 @@ class Product < ApplicationRecord
   scope :product_barcode_nil, -> { where(barcode: [nil, '']).order(:id) }
   scope :product_image_nil, -> { where(image: [nil, '']).order(:id) }
   scope :product_api_update, -> { product_barcode_nil + product_image_nil }
+  scope :product_for_insales, -> { where('quantity > 0').where.not(price: [nil, 0]).pluck(:id) }
   validates :sku, uniqueness: true
 
   #Product.select(:cattitle).uniq.order('cattitle ASC')
@@ -112,18 +113,19 @@ class Product < ApplicationRecord
 			sdesc = row["Полное наименование"]
 			costprice = row["Цена дил."]
 			price = row["Цена роз."]
-      quantity = row["Остаток"].to_s.gsub('>','') if row["Остаток"] != nil
+      quantity1 = row["Остаток"].to_s.gsub('>','') if row["Остаток"] != nil
       if title.present?
   			product = Product.find_by_sku(sku)
   			if product.present?
-  				product.update_attributes(skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, quantity: quantity)
+  				product.update_attributes(skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, quantity1: quantity1)
   			else
-  				Product.create(sku: sku, skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, price: price, quantity: quantity)
+  				Product.create(sku: sku, skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, price: price, quantity1: quantity1)
   			end
       end
     end
 
 		puts 'конец обновляем из файла - '+Time.now.in_time_zone('Moscow').to_s
+    Product.update_quantity
     Product.price_updates
   end
 
@@ -141,28 +143,26 @@ class Product < ApplicationRecord
   			title_file = prf.css('td')[1]
         title = title_file.text
         url = title_file.css('a')[0]['href'].gsub('http','https')
-  			costprice = prf.css('td')[3].text
-  			price = (costprice.to_i*1.10).round(-1)
-        quantity_file = prf.css('td')[4].text
+  			costprice2 = prf.css('td')[3].text
+  			# price = (costprice.to_i*1.10).round(-1)
+        quantity2 = prf.css('td')[4].text
         if sku.present?
-    			product = Product.find_by_sku(sku)
+    			product = Product.find_by_sku2(sku2)
     			if product.present?
-            quantity = quantity_file.to_i+product.quantity.to_i
-    				product.update_attributes(sku2: sku2, skubrand: skubrand, title: title, price: price, costprice: costprice, quantity: quantity, url: url)
+    				product.update_attributes(costprice2: costprice2, quantity2: quantity2)
     			else
-            quantity = quantity_file
-    				Product.create(sku: sku, sku2: sku2, skubrand: skubrand, title: title, costprice: costprice, price: price, quantity: quantity, url: url)
+    				Product.create(sku: sku, sku2: sku2, skubrand: skubrand, title: title, costprice2: costprice2, quantity2: quantity2, url: url)
     			end
         end
       end
 
-      break if index == 10 and Rails.env.development?
-
+      break if index == 30 and Rails.env.development?
     end
 
 		puts 'конец обновляем из файла vstrade - '+Time.now.in_time_zone('Moscow').to_s
     Product.vstrade_get_image_desc
-    # Product.price_updates
+    Product.update_quantity
+    Product.price_updates
   end
 
   def self.vstrade_get_image_desc
@@ -193,15 +193,18 @@ class Product < ApplicationRecord
       end
       pict_file = picts.uniq.join(' ')
       proper = []
-      proper_file = pr_doc.css('.tech-info-block .expand-content').inner_html.gsub('</dt>',':').gsub('</dd>',' --- ').gsub('<dt>','').gsub('<dd>','').gsub(/\n/,'')
+      proper_file = pr_doc.css('.tech-info-block .expand-content').inner_html.gsub('</dt>',':').gsub('</dd>',' --- ').gsub('<dt>','').gsub('<dd>','')
       clear_proper = Nokogiri::HTML(proper_file)
       properties = clear_proper.text
       properties.split('---').each do |prop|
         if prop.include?(':') and prop.include?('Полное описание')
-          @desc = prop.gsub('Полное описание:','')
+          @desc = prop.gsub('Полное описание:','').squish
         end
-        if prop.include?(':') and !prop.include?('Полное описание') and !prop.include?('Бренд')
-          proper.push(prop)
+        if prop.include?(':') and prop.include?('Штрих код')
+          @barcode = prop.gsub('Штрих код:','').squish
+        end
+        if prop.include?(':') and !prop.include?('Полное описание') and !prop.include?('Бренд') and !prop.include?('Штрих код')
+          proper.push(prop.squish)
         end
       end
       charact_file = proper.join(' --- ')
@@ -248,8 +251,13 @@ class Product < ApplicationRecord
         charact = pr.charact
       end
 
+      if !pr.barcode.present?
+        barcode = @barcode
+      else
+        barcode = pr.barcode
+      end
 
-      pr.update_attributes(desc: desc, charact: charact, image: pict, brand: brand, cattitle: cattitle )
+      pr.update_attributes(desc: desc, charact: charact, image: image, brand: brand, cattitle: cattitle, barcode: barcode )
 
     end
 
@@ -352,7 +360,7 @@ class Product < ApplicationRecord
 		end
 
 		#создаём файл со статичными данными
-		@tovs = Product.product_qt_not_null.order(:id)#.limit(1) #where('title like ?', '%Bellelli B-bip%')
+		@tovs = Product.where(id: product_insales)#.limit(1) #where('title like ?', '%Bellelli B-bip%')
 		file = "#{Rails.root}/public/c44kz.csv"
 		CSV.open( file, 'w') do |writer|
 		headers = ['fid','Артикул', 'Штрих-код', 'Название товара', 'Краткое описание', 'Полное описание', 'Цена продажи', 'Остаток', 'Изображения', 'Параметр: Брэнд', 'Параметр: Артикул Производителя', 'Подкатегория 1', 'Подкатегория 2', 'Подкатегория 3', 'Подкатегория 4', 'Вес' ]
@@ -478,7 +486,7 @@ class Product < ApplicationRecord
 		end
 
 		#создаём файл со статичными данными
-		@tovs = Product.where(id: products).order(:id)#.limit(10) #where('title like ?', '%Bellelli B-bip%')
+		@tovs = Product.where(id: products).where.not(price: [nil, 0]).order(:id)#.limit(10) #where('title like ?', '%Bellelli B-bip%')
 		file = "#{Rails.root}/public/c44kz_selected.csv"
 		CSV.open( file, 'w') do |writer|
 		headers = ['fid','Артикул', 'Штрихкод', 'Название товара', 'Краткое описание', 'Полное описание', 'Цена продажи', 'Остаток', 'Изображения', 'Параметр: Брэнд', 'Параметр: Артикул Производителя', 'Подкатегория 1', 'Подкатегория 2', 'Подкатегория 3', 'Подкатегория 4', 'Вес' ]
@@ -642,15 +650,16 @@ class Product < ApplicationRecord
 
   def self.update_pricepr(pr_id)
     product = Product.find_by_id(pr_id)
+    cost_price = product.costprice ||= 0
     if product.pricepr.present?
-      new_price = (product.costprice + product.pricepr.to_f/100*product.costprice).round(-1)
+      new_price = (cost_price + product.pricepr.to_f/100*cost_price).round(-1)
       product.update_attributes(price: new_price)
     else
       if product.cattitle.present?
         search_product = Product.where(cattitle: product.cattitle).where.not(pricepr: [nil]).first
         if search_product.present?
           product.update_attributes(pricepr: search_product.pricepr)
-          new_price = (product.costprice + search_product.pricepr.to_f/100*product.costprice).round(-1)
+          new_price = (cost_price + search_product.pricepr.to_f/100*cost_price).round(-1)
           product.update_attributes(price: new_price)
         end
       end
@@ -699,6 +708,16 @@ class Product < ApplicationRecord
                 }
     end
     puts 'finish insales_param'
+  end
+
+  def self.update_quantity
+    products = Product.all
+    products.each do |pr|
+      q1 = pr.quantity1 ||= 0
+      q2 = pr.quantity2 ||= 0
+      pr.quantity = q1 + q2
+      pr.save
+    end
   end
 
 end
