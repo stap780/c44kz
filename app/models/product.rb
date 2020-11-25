@@ -144,14 +144,18 @@ class Product < ApplicationRecord
         title = title_file.text
         url = title_file.css('a')[0]['href'].gsub('http','https')
   			costprice2 = prf.css('td')[3].text
-  			# price = (costprice.to_i*1.10).round(-1)
         quantity2 = prf.css('td')[4].text
         if sku.present?
     			product = Product.find_by_sku2(sku2)
     			if product.present?
-    				product.update_attributes(costprice2: costprice2, quantity2: quantity2)
+            if product.costprice.present?
+              costprice = product.costprice
+            else
+              costprice = costprice2
+            end
+    				product.update_attributes(costprice: costprice, costprice2: costprice2, quantity2: quantity2)
     			else
-    				Product.create(sku: sku, sku2: sku2, skubrand: skubrand, title: title, costprice2: costprice2, quantity2: quantity2, url: url)
+    				Product.create(sku: sku, sku2: sku2, skubrand: skubrand, title: title, costprice: costprice2, costprice2: costprice2, quantity2: quantity2, url: url)
     			end
         end
       end
