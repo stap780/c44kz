@@ -36,11 +36,12 @@ every 20.minutes do
 # every 1.day, at: ['1:00','3:00', '5:00', '7:00', '9:00', '11:00', '13:00', '15:00', '17:00', '19:00', '21:00', '23:00'] do
   runner "Product.get_file"
 end
-every 1.day, at: ['1:30', '3:30', '5:30', '7:30', '9:30', '11:30', '13:30', '15:30', '17:30'] do
-  runner "Product.csv_param"
-end
-
-
 every 1.day, :at => '18:00' do
   runner "Product.load_by_api"
+end
+every 20.minutes do
+  runner "Product.get_file_vstrade"
+end
+every 1.day, at: ['1:30', '3:30', '5:30', '7:30', '9:30', '11:30', '13:30', '15:30', '17:30'] do
+  runner "Product.csv_param"
 end
