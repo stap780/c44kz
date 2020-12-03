@@ -80,7 +80,7 @@ class Product < ApplicationRecord
 		form['LoginForm[password]'] = "87654321"
 		form.submit
 		page = a.get("https://www.vstrade.kz/")
-		url = "https://vstrade.kz/t/price.php"
+		url = "http://vstrade.kz/t/spec-price.php"
 
     download = RestClient::Request.execute(method: :get, url: url, raw_response: true)
     unless download.code == 200
@@ -148,7 +148,7 @@ class Product < ApplicationRecord
         if sku.present?
     			product = Product.find_by_sku2(sku2)
     			if product.present?
-            if product.costprice.present?
+            if product.costprice.present? and product.sku != sku
               costprice = product.costprice
             else
               costprice = costprice2
