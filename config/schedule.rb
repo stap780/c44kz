@@ -42,6 +42,9 @@ end
 every 20.minutes do
   runner "Product.get_file_vstrade"
 end
-every 1.day, at: ['1:30', '3:30', '5:30', '7:30', '9:30', '11:30', '13:30', '15:30', '17:30'] do
+# every 1.day, at: ['1:30', '3:30', '5:30', '7:30', '9:30', '11:30', '13:30', '15:30', '17:30'] do
+#   runner "Product.csv_param"
+# end
+every 20.minutes do
   runner "Product.csv_param"
 end
