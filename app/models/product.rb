@@ -89,7 +89,7 @@ class Product < ApplicationRecord
     else
   		download_path = "#{Rails.public_path}"+"/vstrade_full.html"
   		IO.copy_stream(download.file.path, download_path)
-      Product.update_all(quantity1: 0)
+      Product.update_all(quantity2: 0)
       Product.open_file_vstrade
     end
 
