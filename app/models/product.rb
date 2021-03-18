@@ -708,10 +708,10 @@ class Product < ApplicationRecord
       product.update_attributes(optprice: new_optprice)
     else
       if product.cattitle.present?
-        search_product = Product.where(cattitle: product.cattitle).where.not(optprice: [nil]).first
+        search_product = Product.where(cattitle: product.cattitle).where.not(pricepropt: [nil]).first
         if search_product.present?
-          product.update_attributes(optprice: search_product.optprice)
-          new_optprice = (cost_price + search_product.optprice.to_f/100*cost_price).round(-1)
+          product.update_attributes(pricepropt: search_product.pricepropt)
+          new_optprice = (cost_price + search_product.pricepropt.to_f/100*cost_price).round(-1)
           product.update_attributes(optprice: new_optprice)
         end
       end

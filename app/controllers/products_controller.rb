@@ -14,7 +14,7 @@ class ProductsController < ApplicationController
             value = 0
           end
           if v == "1"
-            value = Array(1..300)
+            value = Array(1..3000)
           end
             new_q[k] = value
         else
