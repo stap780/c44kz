@@ -14,7 +14,7 @@ class ProductsController < ApplicationController
             value = 0
           end
           if v == "1"
-            value = Array(1..200)
+            value = Array(1..300)
           end
             new_q[k] = value
         else
@@ -140,6 +140,9 @@ class ProductsController < ApplicationController
             if key.to_s == 'pricepr'
               Product.update_pricepr(pr.id)
             end
+            if key.to_s == 'pricepropt'
+              Product.update_pricepropt(pr.id)
+            end
 					end
 				end
 			end
@@ -208,6 +211,6 @@ class ProductsController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.require(:product).permit(:sku, :sku2, :skubrand, :barcode, :brand, :title, :sdesc, :desc, :cat, :charact, :costprice, :costprice2, :price, :quantity, :quantity1, :quantity2, :image, :weight, :url, :cattitle, :pricepr, :otchet_type)
+      params.require(:product).permit(:sku, :sku2, :skubrand, :barcode, :brand, :title, :sdesc, :desc, :cat, :charact, :costprice, :costprice2, :price, :quantity, :quantity1, :quantity2, :image, :weight, :url, :cattitle, :pricepr, :otchet_type, :pricepropt, :optprice)
     end
 end

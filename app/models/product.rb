@@ -392,7 +392,7 @@ class Product < ApplicationRecord
 		@tovs = Product.where(id: product_for_insales)#.limit(1) #where('title like ?', '%Bellelli B-bip%')
 		file = "#{Rails.root}/public/c44kz.csv"
 		CSV.open( file, 'w') do |writer|
-		headers = ['fid','Артикул', 'Штрих-код', 'Название товара', 'Краткое описание', 'Полное описание', 'Цена продажи', 'Остаток', 'Изображения', 'Параметр: Брэнд', 'Параметр: Артикул Производителя', 'Подкатегория 1', 'Подкатегория 2', 'Подкатегория 3', 'Подкатегория 4', 'Вес' ]
+		headers = ['fid','Артикул', 'Штрих-код', 'Название товара', 'Краткое описание', 'Полное описание', 'Цена продажи', 'Остаток', 'Изображения', 'Параметр: Брэнд', 'Параметр: Артикул Производителя', 'Подкатегория 1', 'Подкатегория 2', 'Подкатегория 3', 'Подкатегория 4', 'Вес', 'Цена оптовая']
 
 		writer << headers
 		@tovs.each do |pr|
@@ -404,6 +404,7 @@ class Product < ApplicationRecord
         sdesc = pr.sdesc
         desc = pr.desc
         price = pr.price
+        optprice = pr.optprice
         quantity = pr.quantity
 				image = pr.image
         brand = pr.brand
@@ -413,7 +414,7 @@ class Product < ApplicationRecord
 				cat2 = pr.cattitle.split('/')[2] || '' if pr.cattitle != nil
 				cat3 = pr.cattitle.split('/')[3] || '' if pr.cattitle != nil
         weight = pr.weight
-				writer << [fid, sku, barcode, title, sdesc, desc, price, quantity, image, brand, skubrand, cat, cat1, cat2, cat3, weight ]
+				writer << [fid, sku, barcode, title, sdesc, desc, price, quantity, image, brand, skubrand, cat, cat1, cat2, cat3, weight, optprice ]
 				end
 			end
 		end #CSV.open
@@ -518,7 +519,7 @@ class Product < ApplicationRecord
 		@tovs = Product.where(id: products).where.not(price: [nil, 0]).order(:id)#.limit(10) #where('title like ?', '%Bellelli B-bip%')
 		file = "#{Rails.root}/public/c44kz_selected.csv"
 		CSV.open( file, 'w') do |writer|
-		headers = ['fid','Артикул', 'Штрихкод', 'Название товара', 'Краткое описание', 'Полное описание', 'Цена продажи', 'Остаток', 'Изображения', 'Параметр: Брэнд', 'Параметр: Артикул Производителя', 'Подкатегория 1', 'Подкатегория 2', 'Подкатегория 3', 'Подкатегория 4', 'Вес' ]
+		headers = ['fid','Артикул', 'Штрихкод', 'Название товара', 'Краткое описание', 'Полное описание', 'Цена продажи', 'Остаток', 'Изображения', 'Параметр: Брэнд', 'Параметр: Артикул Производителя', 'Подкатегория 1', 'Подкатегория 2', 'Подкатегория 3', 'Подкатегория 4', 'Вес', 'Цена оптовая' ]
 
 		writer << headers
 		@tovs.each do |pr|
@@ -530,6 +531,7 @@ class Product < ApplicationRecord
         sdesc = pr.sdesc
         desc = pr.desc
         price = pr.price
+        optprice = pr.optprice
         quantity = pr.quantity
 				image = pr.image
         brand = pr.brand
@@ -539,7 +541,7 @@ class Product < ApplicationRecord
 				cat2 = pr.cattitle.split('/')[2] || '' if pr.cattitle != nil
 				cat3 = pr.cattitle.split('/')[3] || '' if pr.cattitle != nil
         weight = pr.weight
-				writer << [fid, sku, barcode, title, sdesc, desc, price, quantity, image, brand, skubrand, cat, cat1, cat2, cat3, weight ]
+				writer << [fid, sku, barcode, title, sdesc, desc, price, quantity, image, brand, skubrand, cat, cat1, cat2, cat3, weight, optprice ]
 				end
 			end
 		end #CSV.open
@@ -604,11 +606,13 @@ class Product < ApplicationRecord
 				if vel != nil
 # 				puts vel.id
 					if vel.charact.present? # Вид записи должен быть типа - "Длина рамы: 20 --- Ширина рамы: 30"
-					vel.charact.split('---').each do |vp|
-						key = 'Параметр: '+vp.split(':')[0].strip
-						value = vp.split(':')[1].remove('.') if vp.split(':')[1] !=nil
-						row[key] = value
-					end
+  					vel.charact.split('---').each do |vp|
+              if check_property_use.include?(vp.split(':')[0].strip)
+    						key = 'Параметр: '+vp.split(':')[0].strip
+    						value = vp.split(':')[1].remove('.') if vp.split(':')[1] !=nil
+    						row[key] = value
+              end
+  					end
 					end
 				end
 			csv_out << row
@@ -673,6 +677,7 @@ class Product < ApplicationRecord
     products = Product.all.order(:id)
     products.each do |product|
       Product.update_pricepr(product.id)
+      Product.update_pricepropt(product.id)
     end
     puts 'конец обновляем цены по процентам по категориям - '+Time.now.in_time_zone('Moscow').to_s
   end
@@ -690,6 +695,24 @@ class Product < ApplicationRecord
           product.update_attributes(pricepr: search_product.pricepr)
           new_price = (cost_price + search_product.pricepr.to_f/100*cost_price).round(-1)
           product.update_attributes(price: new_price)
+        end
+      end
+    end
+  end
+
+  def self.update_pricepropt(pr_id)
+    product = Product.find_by_id(pr_id)
+    cost_price = product.costprice ||= 0
+    if product.pricepropt.present?
+      new_optprice = (cost_price + product.pricepropt.to_f/100*cost_price).round(-1)
+      product.update_attributes(optprice: new_optprice)
+    else
+      if product.cattitle.present?
+        search_product = Product.where(cattitle: product.cattitle).where.not(optprice: [nil]).first
+        if search_product.present?
+          product.update_attributes(optprice: search_product.optprice)
+          new_optprice = (cost_price + search_product.optprice.to_f/100*cost_price).round(-1)
+          product.update_attributes(optprice: new_optprice)
         end
       end
     end

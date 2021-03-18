@@ -8,9 +8,13 @@
 
 	<%= fields_for :product_attr do |f| %>
 	 <div class="form-group">
-		<%= f.label :pricepr, 'Процент' %><br />
+		<%= f.label :pricepr, 'Процент розница' %><br />
 		<%= f.number_field :pricepr,  { min: 1, class: "form-control"} %>
 	</div>
+	<div class="form-group">
+	 <%= f.label :pricepropt, 'Процент опт' %><br />
+	 <%= f.number_field :pricepropt,  { min: 1, class: "form-control"} %>
+ </div>
 		<!-- <div class="form-group">
 			<%# f.label :catins, 'Категория Инсалес' %><br />
 			<%# f.select :catins, Product.order('id asc').map { |r| [r.catins] }, {:include_blank => true}, {class: "form-control"} %>

@@ -64,8 +64,10 @@
     <th>Параметры</th>
     <th>ЗЦ1</th>
     <th>ЗЦ2</th>
-    <th>%</th>
-    <th>ЦПр</th>
+    <th>%Опт</th>
+    <th>ЦОпт</th>
+    <th>%Роз</th>
+    <th>ЦРоз</th>
     <th>ОстОбщ</th>
     <th style="min-width:250px;">Карт</th>
     <th>Barcode</th>
@@ -89,6 +91,8 @@
       <td><%= product.charact.truncate(25) if product.charact != nil %></td>
       <td><%= best_in_place product, :costprice %></td>
       <td><%= product.costprice2 %></td>
+      <td><%= product.pricepropt %></td>
+      <td><%= product.optprice %></td>
       <td><%= product.pricepr %></td>
       <td><%= product.price %></td>
       <td class="text-center"><%= product.quantity %></td>
