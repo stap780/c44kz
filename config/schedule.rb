@@ -49,3 +49,6 @@ end
 # every 20.minutes do
 #   runner "Product.csv_param"
 # end
+every 1.day, :at => '11:55' do
+  runner "Product.kaspi_xml"
+end
