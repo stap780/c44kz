@@ -795,12 +795,12 @@ class Product < ApplicationRecord
           xml.company 'CompanyName'
           xml.merchantid 'CompanyID'
         pr_array.each do |pr|
-          puts pr.to_s
+          # puts pr.to_s
           xml.send(:'offer', :sku => pr[:sku]) {
             xml.model pr[:model]
             xml.brand pr[:brand]
             xml.send(:'availabilities') {
-              xml.availability(:available => pr[:available] == 'true' ? 'yes' : 'no', :storeId => "myFavoritePickupPoint1" )
+              xml.availability(:available => pr[:available] == true ? 'yes' : 'no', :storeId => "myFavoritePickupPoint1" )
             }
             xml.price pr[:price]
           }
