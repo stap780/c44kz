@@ -792,15 +792,15 @@ class Product < ApplicationRecord
     xml = Nokogiri::XML::Builder.new(:encoding => 'UTF-8'){ |xml|
       xml.send(:'kaspi_catalog', :date => "#{Time.now.in_time_zone.strftime("%Y-%m-%d %H:%M")}", :xmlns => 'kaspiShopping',  :'xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance", :'xsi:schemaLocation' => "kaspiShopping http://kaspi.kz/kaspishopping.xsd") {  #, :xmlns:xsi => "http://www.w3.org/2001/XMLSchema-instance", :xsi:schemaLocation => "kaspiShopping http://kaspi.kz/kaspishopping.xsd"
         xml.offers {
-          xml.company 'CompanyName'
-          xml.merchantid 'CompanyID'
+          xml.company 'c44_kz'
+          xml.merchantid '412031'
         pr_array.each do |pr|
           # puts pr.to_s
           xml.send(:'offer', :sku => pr[:sku]) {
             xml.model pr[:model]
             xml.brand pr[:brand]
             xml.send(:'availabilities') {
-              xml.availability(:available => pr[:available] == true ? 'yes' : 'no', :storeId => "myFavoritePickupPoint1" )
+              xml.availability(:available => pr[:available] == true ? 'yes' : 'no', :storeId => "Папанина 53д" )
             }
             xml.price pr[:price]
           }
