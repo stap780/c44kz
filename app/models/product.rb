@@ -78,7 +78,7 @@ class Product < ApplicationRecord
     form['LoginForm[password]'] = '87654321'
     form.submit
     page = a.get('https://www.vstrade.kz/')
-    url = 'http://vstrade.kz/t/spec-price.php'
+    url = 'https://vstrade.kz/t/spec-price.php'
 
     download = RestClient::Request.execute(method: :get, url: url, raw_response: true)
     if download.code == 200
@@ -98,11 +98,8 @@ class Product < ApplicationRecord
     puts 'обновляем из файла - ' + Time.now.in_time_zone('Moscow').to_s
     spreadsheet = open_spreadsheet(file)
     header = spreadsheet.row(1)
-    last_number = if Rails.env.development?
-                    120
-                  else
-                    spreadsheet.last_row.to_i
-                  end
+    last_number = Rails.env.development? ? 120 : spreadsheet.last_row.to_i
+
     (2..last_number).each do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
 
@@ -143,7 +140,7 @@ class Product < ApplicationRecord
         skubrand = prf.css('td')[2].text
         title_file = prf.css('td')[1]
         title = title_file.text
-        url = title_file.css('a')[0]['href'].gsub('http', 'https')
+        url = title_file.css('a')[0]['href'].gsub('http://', 'https://wwww.')
         costprice2 = prf.css('td')[3].text
         quantity2 = prf.css('td')[4].text
         if sku.present?
@@ -322,7 +319,7 @@ class Product < ApplicationRecord
     while count > 0
       puts 'offset - ' + offset.to_s
       products = Product.product_api_update.slice(offset.to_s.to_i, 50) # .limit(50).offset("#{offset}")
-      articles = products.pluck(:sku).join(',') || ''
+      articles = products.nil? ? '' : products.pluck(:sku).join(',')
       # puts articles
       if articles.present? && (articles != '')
         url = 'https://api.al-style.kz/api/element-info?access-token=Py8UvH0yDeHgN0KQ3KTLP2jDEtCR5ijm&article=' + articles + '&additional_fields=barcode,description,brand,properties,detailtext,images,weight,url'
