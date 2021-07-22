@@ -140,7 +140,7 @@ class Product < ApplicationRecord
         skubrand = prf.css('td')[2].text
         title_file = prf.css('td')[1]
         title = title_file.text
-        url = title_file.css('a')[0]['href'].gsub('http://', 'https://wwww.')
+        url = title_file.css('a')[0]['href'].gsub('http://vstrade.kz', 'https://wwww.vstrade.kz')
         costprice2 = prf.css('td')[3].text
         quantity2 = prf.css('td')[4].text
         if sku.present?
