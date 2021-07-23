@@ -169,7 +169,7 @@ class Product < ApplicationRecord
   def self.vstrade_get_image_desc
     puts 'обновляем vstrade_get_image_desc - ' + Time.now.in_time_zone('Moscow').to_s
 
-    products = Product.where.not(sku2: [nil, '']).where(image: [nil, ''])
+    products = Product.where.not(sku2: [nil, '']).where(image: [nil, '']).order(:id)
     products.each do |pr|
       puts 'pr id - ' + pr.id.to_s
       pr_url = Addressable::URI.parse(pr.url).normalize.to_s
@@ -810,7 +810,7 @@ class Product < ApplicationRecord
 
   def vstrade_url_normalize
     if self.url.include?('vstrade')
-      self.url = self.url.gsub('http://vstrade.kz','https://www.vstrade.kz')
+      self.url = self.url.include?('https') ? self.url.gsub('https://vstrade.kz','https://www.vstrade.kz') : self.url.gsub('http://vstrade.kz','https://www.vstrade.kz')
     end
   end
 end
