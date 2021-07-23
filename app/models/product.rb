@@ -8,6 +8,7 @@ class Product < ApplicationRecord
   scope :product_image_nil, -> { where(image: [nil, '']).order(:id) }
   scope :product_api_update, -> { product_barcode_nil + product_image_nil }
   scope :product_for_insales, -> { where('quantity > 0').where.not(price: [nil, 0]).pluck(:id) }
+  before_save :vstrade_url_normalize
   validates :sku, uniqueness: true
 
   # Product.select(:cattitle).uniq.order('cattitle ASC')
@@ -140,17 +141,14 @@ class Product < ApplicationRecord
         skubrand = prf.css('td')[2].text
         title_file = prf.css('td')[1]
         title = title_file.text
-        url = title_file.css('a')[0]['href'].gsub('http://vstrade.kz', 'https://wwww.vstrade.kz')
+        url = title_file.css('a')[0]['href']#.gsub('http://vstrade.kz', 'https://wwww.vstrade.kz')
         costprice2 = prf.css('td')[3].text
         quantity2 = prf.css('td')[4].text
         if sku.present?
           product = Product.find_by_sku2(sku2)
           if product.present?
-            costprice = if product.costprice.present? && (product.sku != sku)
-                          product.costprice
-                        else
-                          costprice2
-                        end
+            costprice = product.costprice.present? && product.sku != sku ? product.costprice : costprice2
+
             product.update_attributes(costprice: costprice, costprice2: costprice2, quantity2: quantity2)
           else
             Product.create(sku: sku, sku2: sku2, skubrand: skubrand, title: title, costprice: costprice2,
@@ -810,5 +808,9 @@ class Product < ApplicationRecord
     puts "Сформировали kaspi_xml "+"#{Time.zone.now}"
   end
 
-
+  def vstrade_url_normalize
+    if self.url.include?('vstrade')
+      self.url = self.url.gsub('http://vstrade.kz','https://www.vstrade.kz')
+    end
+  end
 end
