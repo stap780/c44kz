@@ -82,7 +82,7 @@
       <td><%= link_to product.sku, edit_product_path(product) %></td>
       <td><%= best_in_place product, :sku2 %></td>
       <td><%= product.title %></td>
-      <td><%= product.sdesc.truncate(25) if product.sdesc != nil %></td>
+      <td><% if product.sdesc.present? %><span class="oi oi-check" data-container="body" data-toggle="popover" data-placement="right" data-trigger="hover" data-html="true" data-content="<%= product.sdesc %>"></span><% end %></td>
       <td class="text-center"><% if product.desc.present? %><span class="oi oi-check" data-container="body" data-toggle="popover" data-placement="right" data-trigger="hover" data-html="true" data-content="<%= product.desc %>"></span><% end %></td>
       <td><% if product.cat %>(<%= product.cat %>)<% end %> <%= product.cattitle %></td>
       <td><% if product.charact.present? %><span class="oi oi-check" data-container="body" data-toggle="popover" data-placement="right" data-trigger="hover" data-html="true" data-content="<%= product.charact %>"></span><% end %></td>
