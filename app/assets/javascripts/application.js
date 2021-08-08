@@ -32,6 +32,6 @@ $(document).ready(function() {
     $('#modal-edit').modal('show');
   });
 
-
+  $('[data-toggle="popover"]').popover();
 
 });
