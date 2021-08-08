@@ -10,15 +10,10 @@ class ProductsController < ApplicationController
       params[:q].each do |k,v|
         if k == 'quantity_in'
           puts v
-          if v == "0"
-            value = 0
-          end
-          if v == "1"
-            value = Array(1..3000)
-          end
-            new_q[k] = value
+          value = v == "0" ? 0 : Array(1..3500)
+          new_q[k] = value
         else
-        new_q[k] = v
+          new_q[k] = v
         end
       end
       # puts new_q

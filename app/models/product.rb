@@ -9,6 +9,7 @@ class Product < ApplicationRecord
   scope :product_api_update, -> { product_barcode_nil + product_image_nil }
   scope :product_for_insales, -> { where('quantity > 0').where.not(price: [nil, 0]).pluck(:id) }
   before_save :vstrade_url_normalize
+  before_save :update_quantity
   validates :sku, uniqueness: true
 
   # Product.select(:cattitle).uniq.order('cattitle ASC')
@@ -27,41 +28,6 @@ class Product < ApplicationRecord
       sleep 0.5
       puts 'sleep 0.5'
     end
-
-    # begin
-    # RestClient.get( url, raw_response: true) { |response, request, result, &block|
-    #   case response.code
-    #   when 200
-    #     puts 'code 200 - ok - обновили содержание'
-    #     puts response.file.size
-    #   when 422
-    #     puts response
-    #     break #raise SomeCustomExceptionIfYouWant
-    #   when 404
-    #     puts ' error 404'
-    #     puts 'sleep 0.5'
-    #     sleep 0.5
-    #     redo
-    #   else
-    #     response.return!(&block)
-    #   end
-    #   }
-    #
-    # end
-
-    # loop do
-    #   download = RestClient::Request.execute(method: :get, url: url, raw_response: true)
-    #   if download.code == 200
-    #     download_path = "#{Rails.public_path}"+'/ost.xlsx' #+Date.today.in_time_zone('Moscow').strftime("%d_%m_%Y").to_s+'.xlsx'
-    #     IO.copy_stream(download.file.path, download_path)
-    #     Product.open_file(download_path)
-    #     break       # this will cause execution to exit the loop
-    #   end
-    #   if download.code == 404
-    #     sleep 0.5
-    #     puts 'sleep 0.5'
-    #   end
-    # end
 
     puts 'закончили загружаем файл с остатками - ' + Time.now.in_time_zone('Moscow').to_s
   end
@@ -101,7 +67,7 @@ class Product < ApplicationRecord
     header = spreadsheet.row(1)
     last_number = Rails.env.development? ? 120 : spreadsheet.last_row.to_i
 
-    (2..last_number).each do |i|
+    (5..last_number).each do |i|
       row = Hash[[header, spreadsheet.row(i)].transpose]
 
       sku = row['Код']
@@ -113,14 +79,10 @@ class Product < ApplicationRecord
       quantity1 = row['Остаток'].to_s.gsub('>', '') unless row['Остаток'].nil?
       next unless title.present?
 
-      product = Product.find_by_sku(sku)
-      if product.present?
-        product.update_attributes(skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice,
-                                  quantity1: quantity1)
-      else
-        Product.create(sku: sku, skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, price: price,
-                       quantity1: quantity1)
-      end
+      product_data = { sku: sku, skubrand: skubrand, title: title, sdesc: sdesc, costprice: costprice, price: price,
+                     quantity1: quantity1 }
+      product = Product.find_by_sku(product_data[:sku])
+      product.present? ? product.update(product_data) : Product.create(product_data)
     end
 
     puts 'конец обновляем из файла - ' + Time.now.in_time_zone('Moscow').to_s
@@ -809,8 +771,14 @@ class Product < ApplicationRecord
   end
 
   def vstrade_url_normalize
-    if self.url.include?('vstrade')
+    if !self.url.nil? && self.url.include?('vstrade')
       self.url = self.url.include?('https') ? self.url.gsub('https://vstrade.kz','https://www.vstrade.kz') : self.url.gsub('http://vstrade.kz','https://www.vstrade.kz')
     end
+  end
+
+  def update_quantity
+    q1 = self.quantity1 ||= 0
+    q2 = self.quantity2 ||= 0
+    self.quantity = q1 + q2
   end
 end
