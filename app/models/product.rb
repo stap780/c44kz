@@ -153,7 +153,7 @@ class Product < ApplicationRecord
       RestClient.get(pr_url) do |response, _request, _result, &block|
         case response.code
         when 200
-          Product.vstrade_get_image_desc_by_product(pr.id)
+          Product.vstrade_get_image_desc_by_product(pr)
         when 422
           puts 'error 422 - обновляем vstrade_get_image_desc'
           puts response
@@ -176,9 +176,10 @@ class Product < ApplicationRecord
     puts 'конец обновляем vstrade_get_image_desc - ' + Time.now.in_time_zone('Moscow').to_s
   end
 
-  def self.vstrade_get_image_desc_by_product(pr_id)
-    pr = Product.find_by_id(pr_id)
-    pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(pr.url).normalize, read_timeout: 50), nil,
+  def self.vstrade_get_image_desc_by_product(pr)
+    url = 'https://www.vstrade.kz/'+ pr.url.split('kz/').last
+
+    pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize, read_timeout: 50), nil,
                             Encoding::UTF_8.to_s)
     # pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
     weight = pr_doc.css('.weight').text.gsub('Вес товара: ', '').gsub('г', '')
@@ -218,50 +219,22 @@ class Product < ApplicationRecord
 
     cat_array = []
     pr_doc.css('.breadcrumbs-content a span').each do |c|
-      if c.text == 'Каталог'
-        cat_array.push('Vstrade')
-      else
-        cat_array.push(c.text)
-      end
+      c.text == 'Каталог' ? cat_array.push('Vstrade') : cat_array.push(c.text)
     end
 
     cattitle_file = cat_array.join('/')
-    desc = if !pr.desc.present?
-             @desc
-           else
-             pr.desc
-           end
+    desc = !pr.desc.present? ? @desc : pr.desc
 
     brand_file = pr_doc.css('meta[itemprop=brand]')[0]['content'] if pr_doc.css('meta[itemprop=brand]').present?
-    brand = if !pr.brand.present?
-              brand_file
-            else
-              pr.brand
-            end
+    brand = !pr.brand.present? ? brand_file : pr.brand
 
-    image = if !pr.image.present?
-              pict_file
-            else
-              pr.image
-            end
+    image = !pr.image.present? ? pict_file : pr.image
 
-    cattitle = if !pr.cattitle.present?
-                 cattitle_file
-               else
-                 pr.cattitle
-               end
+    cattitle = !pr.cattitle.present? ? cattitle_file : pr.cattitle
 
-    charact = if !pr.charact.present?
-                charact_file
-              else
-                pr.charact
-              end
+    charact = !pr.charact.present? ? charact_file : pr.charact
 
-    barcode = if !pr.barcode.present?
-                @barcode
-              else
-                pr.barcode
-              end
+    barcode = !pr.barcode.present? ? @barcode : pr.barcode
 
     pr.update_attributes(desc: desc, charact: charact, image: image, brand: brand, cattitle: cattitle,
                          barcode: barcode)
