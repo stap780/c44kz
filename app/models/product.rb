@@ -147,7 +147,7 @@ class Product < ApplicationRecord
     products = Product.where.not(sku2: [nil, '']).where(image: [nil, '']).order(:id)
     products.each do |pr|
       puts 'pr id - ' + pr.id.to_s
-      url = pr.url.include?('https://wwww') ? pr.url : pr.url.gsub('http://vstrade.kz', 'https://wwww.vstrade.kz')
+      url = pr.url.include?('https://wwww') ? "https://wwww."+pr.url.split('w.').last : pr.url.gsub('http://vstrade.kz', 'https://wwww.vstrade.kz')
       pr_url = Addressable::URI.parse(url).normalize.to_s
       RestClient.get(pr_url) do |response, _request, _result, &block|
         case response.code
