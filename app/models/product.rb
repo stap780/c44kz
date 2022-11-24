@@ -14,6 +14,19 @@ class Product < ApplicationRecord
 
   # Product.select(:cattitle).uniq.order('cattitle ASC')
 
+  def self.quantity_search(v)
+		default_v = Product.pluck(:quantity).uniq.sort.last
+		if v == 'all'
+			value = Array(0..default_v)
+		end
+		if v.to_i == 0
+			value = 0
+		end
+		if v != 'all' and v.to_i != 0
+			value = Array(1..default_v)
+		end
+	end
+
   def self.get_file
     puts 'загружаем файл с остатками - ' + Time.now.in_time_zone('Moscow').to_s
 
@@ -134,7 +147,8 @@ class Product < ApplicationRecord
     products = Product.where.not(sku2: [nil, '']).where(image: [nil, '']).order(:id)
     products.each do |pr|
       puts 'pr id - ' + pr.id.to_s
-      pr_url = Addressable::URI.parse(pr.url).normalize.to_s
+      url = pr.url.include?('https://wwww') ? pr.url : pr.url.gsub('http://vstrade.kz', 'https://wwww.vstrade.kz')
+      pr_url = Addressable::URI.parse(url).normalize.to_s
       RestClient.get(pr_url) do |response, _request, _result, &block|
         case response.code
         when 200

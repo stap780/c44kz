@@ -9,7 +9,7 @@ class ProductsController < ApplicationController
       new_q = {}
       params[:q].each do |k,v|
         if k == 'quantity_in'
-          value =  v.to_i == 0 ? 0 : Array(1..v.to_i)
+          value = Product.quantity_search(v)
           new_q[k] = value
         else
           new_q[k] = v
