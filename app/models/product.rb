@@ -153,7 +153,7 @@ class Product < ApplicationRecord
       RestClient.get(pr_url) do |response, _request, _result, &block|
         case response.code
         when 200
-          Product.vstrade_get_image_desc_by_product(pr)
+          Product.vstrade_get_image_desc_by_product(pr, response)
         when 422
           puts 'error 422 - обновляем vstrade_get_image_desc'
           puts response
@@ -172,15 +172,13 @@ class Product < ApplicationRecord
         end
       end
     end
-
     puts 'конец обновляем vstrade_get_image_desc - ' + Time.now.in_time_zone('Moscow').to_s
   end
 
-  def self.vstrade_get_image_desc_by_product(pr)
+  def self.vstrade_get_image_desc_by_product(pr, response)
     url = 'https://www.vstrade.kz/'+ pr.url.split('kz/').last
 
-    pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize, read_timeout: 50), nil,
-                            Encoding::UTF_8.to_s)
+    pr_doc = Nokogiri::HTML(response, nil, Encoding::UTF_8.to_s)
     # pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
     weight = pr_doc.css('.weight').text.gsub('Вес товара: ', '').gsub('г', '')
     pict_thumbs = pr_doc.css('.thumbnails-slidee .thumb img')
@@ -203,9 +201,7 @@ class Product < ApplicationRecord
     end
     pict_file = picts.uniq.join(' ')
     proper = []
-    proper_file = pr_doc.css('.tech-info-block .expand-content').inner_html.gsub('</dt>', ':').gsub('</dd>', ' --- ').gsub('<dt>', '').gsub(
-      '<dd>', ''
-    )
+    proper_file = pr_doc.css('.tech-info-block .expand-content').inner_html.gsub('</dt>', ':').gsub('</dd>', ' --- ').gsub('<dt>', '').gsub('<dd>', '')
     clear_proper = Nokogiri::HTML(proper_file)
     properties = clear_proper.text
     properties.split('---').each do |prop|
@@ -236,8 +232,7 @@ class Product < ApplicationRecord
 
     barcode = !pr.barcode.present? ? @barcode : pr.barcode
 
-    pr.update_attributes(desc: desc, charact: charact, image: image, brand: brand, cattitle: cattitle,
-                         barcode: barcode)
+    pr.update_attributes(desc: desc, charact: charact, image: image, brand: brand, cattitle: cattitle, barcode: barcode)
   end
 
   def self.open_spreadsheet(file)
