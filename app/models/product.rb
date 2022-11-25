@@ -8,7 +8,8 @@ class Product < ApplicationRecord
   scope :product_image_nil, -> { where(image: [nil, '']).order(:id) }
   scope :product_api_update, -> { product_barcode_nil + product_image_nil }
   scope :product_for_insales, -> { where('quantity > 0').where.not(price: [nil, 0]).pluck(:id) }
-  before_save :vstrade_url_normalize
+  before_save :normalize_data_white_space
+  # before_save :vstrade_url_normalize
   before_save :update_quantity
   validates :sku, uniqueness: true
 
@@ -752,15 +753,23 @@ class Product < ApplicationRecord
     puts "Сформировали kaspi_xml "+"#{Time.zone.now}"
   end
 
-  def vstrade_url_normalize
-    if !self.url.nil? && self.url.include?('vstrade')
-      self.url = self.url.include?('https') ? self.url.gsub('https://vstrade.kz','https://www.vstrade.kz') : self.url.gsub('http://vstrade.kz','https://www.vstrade.kz')
-    end
-  end
+  # def vstrade_url_normalize
+  #   if !self.url.nil? && self.url.include?('vstrade')
+  #     self.url = self.url.include?('https') ? self.url.gsub('https://vstrade.kz','https://www.vstrade.kz') : self.url.gsub('http://vstrade.kz','https://www.vstrade.kz')
+  #   end
+  # end
 
   def update_quantity
     q1 = self.quantity1 ||= 0
     q2 = self.quantity2 ||= 0
     self.quantity = q1 + q2
   end
+
+	def normalize_data_white_space
+	  self.attributes.each do |key, value|
+	  	self[key] = value.squish if value.respond_to?("squish")
+	  end
+	end
+
+
 end

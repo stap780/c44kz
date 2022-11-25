@@ -1,77 +1,68 @@
-<div class="row mb-2 mr-0 ml-0 align-items-center">
-  <div class="col-2 pl-0">
-    <h1>Товары</h1>
-    <span class="align-middle">
-      <small>Всего:
-        <%= Product.product_all_size %></small>
-    </span>
-    <span class="align-middle">
-      <small>Отфильтровано:
-        <%=@products.count%></small>
-    </span>
-    <span class="align-middle">
-      <small>Больше 0:
-        <%= Product.product_qt_not_null_size %></small>
-    </span>
-  </div>
-  <div class="col- mr-1">
-    <div class="dropdown">
-      <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        Действия
-      </a>
-      <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-        <%= link_to 'Загрузить остатки', get_file_products_path, class: 'dropdown-item'%>
-        <%= link_to 'Обновление по api', load_by_api_products_path, class: 'dropdown-item'%>
-        <%= link_to 'Обновление категорий', set_cattitle_products_path, class: 'dropdown-item'%>
-        <%= link_to 'Сформировать файл', csv_param_products_path, class: 'dropdown-item'%>
-        <%= link_to 'Актуал. парам. инсалес', insales_param_products_path, class: 'dropdown-item'%>
-        <%= link_to 'Загр ост Пост2', get_file_vstrade_products_path, class: 'dropdown-item'%>
-      </div>
+<div class="row justify-content-center align-items-center mb-4">
+  <div class="col-2 row">
+    <div class="col-md-12 p-0">
+      <div class="h3">Товары</div>
+      <div class="h6">Всего - <%= Product.product_all_size %></div>
+      <div class="align-middle"><small>Отфильтровано: <%=@products.count%></small></div>
+      <div class="align-middle"><small>Больше 0: <%= Product.product_qt_not_null_size %></small></div>
     </div>
   </div>
-  <div class="col- mr-1">
-    <%= link_to '<span class="oi oi-pencil"></span>'.html_safe, edit_multiple_products_path, class: 'btn btn-secondary', id: 'edit_multiple', remote: true, data: { toggle: 'modal', 'target': '#modal-edit' } %>
-    <%= link_to '<span class="oi oi-trash"></span>'.html_safe, delete_selected_products_path, class: 'btn btn-secondary', id: 'deleteAll', remote: true%>
+  <div class="col-10 pl-0 pr-0 row">
+    <div class="col-12 mb-3">
+      <div class="btn-group p-0" role="group" aria-label="Button group with nested dropdown">
+        <div class="btn-group" role="group">
+          <button id="btnGroupDrop1" type="button" class="btn btn-secondary dropdown-toggle btn-sm" data-toggle="dropdown">Действия</button>
+          <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+            <%= link_to 'Загрузить остатки', get_file_products_path, class: 'dropdown-item'%>
+            <%= link_to 'Обновление по api', load_by_api_products_path, class: 'dropdown-item'%>
+            <%= link_to 'Обновление категорий', set_cattitle_products_path, class: 'dropdown-item'%>
+            <%= link_to 'Сформировать файл', csv_param_products_path, class: 'dropdown-item'%>
+            <%= link_to 'Актуал. парам. инсалес', insales_param_products_path, class: 'dropdown-item'%>
+            <%= link_to 'Загр ост Пост2', get_file_vstrade_products_path, class: 'dropdown-item'%>
+          </div>
+        </div>
+          <%= link_to '<span class="oi oi-pencil"></span>'.html_safe, edit_multiple_products_path, class: 'btn btn-sm btn-secondary', id: 'edit_multiple', remote: true, data: { toggle: 'modal', 'target': '#modal-edit' } %>
+          <%= link_to '<span class="oi oi-trash"></span>'.html_safe, delete_selected_products_path, class: 'btn btn-sm btn-secondary', id: 'deleteAll', remote: true%>
+      </div>
+    </div>
+
+  <%= search_form_for @search, {class: 'form-inline col-12 pl-0 pr-0'} do |f| %>
+    <div class="input-group input-group-sm">
+      <%= f.search_field :sku_or_title_or_skubrand_cont, placeholder: 'Артикул, Название', class: "form-control input-sm"%>
+      <%= f.collection_select :brand_eq, Product.select(:brand).uniq.order('brand ASC'), "brand", "brand", {include_blank: false, prompt: 'Брэнд'} , class: "form-control input-sm" , style: "max-width: 120px;"%>
+      <%= f.collection_select :cattitle_cont, Product.product_cat, "cattitle", "cattitle", {include_blank: false, prompt: 'Категория'} , class: "form-control input-sm" ,style:"max-width: 140px;" %>
+      <%= f.select :barcode_present, [['Есть', 'true'],['Нет', 'false' ]], { include_blank: false, prompt: 'ШтрК'}, class: "form-control input-sm" %>
+      <%= f.select :sku2_present, [['Al-style', 'false' ],['Vstrade', 'true']], { include_blank: false, prompt: 'Пост'}, class: "form-control input-sm" %>
+      <%= f.select :quantity_in, [['все','all'],['> 0', 1],['= 0', 0]], { include_blank: false, prompt: 'Кол-во'}, class: "form-control input-sm" %>
+      <%= f.select :image_present, [['Есть', 'true'],['Нет', 'false' ]], { include_blank: false, prompt: 'Картинка'}, class: "form-control input-sm" %>
+      <div class="form-group ml-2">
+        <%# f.submit 'Поиск', class: 'btn btn-info ' %>
+      <%= button_tag(type: 'submit', :class => "btn btn-info btn-sm") do %><span class="oi oi-magnifying-glass"></span><% end %>
+      <%= link_to '<span class="oi oi-reload"></span>'.html_safe, products_path, class: 'btn btn-sm btn-outline-dark' %>
+      <%= link_to '<span class="oi oi-list"></span>'.html_safe, products_path(params.permit(:products).merge(selected_products: @products.pluck(:id), otchet_type: 'selected')), title: "Создать файл с выбранными товарами", class: 'btn btn-sm btn-outline-dark'%>
+    </div>
+  <% end %>
   </div>
-  <div class="col- pl-0 pr-0">
-    <%= search_form_for @search, html: {class: 'form-inline'} do |f|%>
-    <%= f.search_field :sku_or_title_or_skubrand_cont, placeholder: 'Артикул, Название', class: "form-control input-sm"%>
-    <%= f.collection_select :brand_eq, Product.select(:brand).uniq.order('brand ASC'), "brand", "brand", {include_blank: false, prompt: 'Брэнд'} , class: "form-control input-sm" , style: "max-width: 120px;"%>
-    <%= f.collection_select :cattitle_cont, Product.product_cat, "cattitle", "cattitle", {include_blank: false, prompt: 'Категория'} , class: "form-control input-sm" ,style:"max-width: 140px;" %>
-    <%= f.select :barcode_present, [['Есть', 'true'],['Нет', 'false' ]], { include_blank: false, prompt: 'ШтрК'}, class: "form-control input-sm" %>
-    <%= f.select :sku2_present, [['Al-style', 'false' ],['Vstrade', 'true']], { include_blank: false, prompt: 'Пост'}, class: "form-control input-sm" %>
-    <%= f.select :quantity_in, [['все','all'],['> 0', 1],['= 0', 0]], { include_blank: false, prompt: 'Кол-во'}, class: "form-control input-sm" %>
-    <div class="form-group ml-2">
-      <%# f.submit 'Поиск', class: 'btn btn-info ' %>
-    <%= button_tag(type: 'submit', :class => "btn btn-info") do %><span class="oi oi-magnifying-glass"></span><% end %>
-    <%= link_to '<span class="oi oi-reload"></span>'.html_safe, products_path, class: 'btn btn-outline-dark' %>
-    <%= link_to '<span class="oi oi-list"></span>'.html_safe, products_path(params.permit(:products).merge(selected_products: @products.pluck(:id), otchet_type: 'selected')), title: "Создать файл с выбранными товарами", class: 'btn btn-outline-dark'%>
-  </div>
-<% end %>
-</div>
 </div>
 <div class="table-responsive">
 <table class="table table-hover table-condensed table-sm">
 <thead class="thead-light">
   <tr>
     <th><%= check_box_tag 'selectAll', value = 'selectAll'%></th>
-    <th>Артикул</th>
-    <th>Артикул2</th>
-    <th style="min-width:250px;">Наименование</th>
+    <th>id</th>
+    <th>Артикулы</th>
+    <th style="min-width:250px;">Данные</th>
     <th>КрОпис</th>
-    <th>Опис</th>
     <th>Категория</th>
-    <th>Параметры</th>
     <th style="min-width:130px;">ЗакупЦена</th>
     <th style="min-width:130px;">Опт</th>
     <th style="min-width:130px;">Розница</th>
     <th>ОстОбщ</th>
-    <th style="min-width:250px;">Карт</th>
+    <th style="min-width:150px;max-width:250px;">Карт</th>
     <th>Barcode</th>
     <th>Бренд</th>
     <th>Вес</th>
     <th>АртПр</th>
-    <th>Url</th>
     <th colspan="1"></th>
   </tr>
 </thead>
@@ -79,32 +70,28 @@
   <% @products.each do |product| %>
     <tr>
       <td><%=check_box_tag "product_ids[]", product.id%></td>
-      <td><%= link_to product.sku, edit_product_path(product) %></td>
-      <td><%= best_in_place product, :sku2 %></td>
-      <td><%= product.title %></td>
+      <td><%= link_to product.id, edit_product_path(product) %></td>
+      <td>П1:<%= best_in_place product, :sku %></br>П2:<%= best_in_place product, :sku2 %></td>
+      <td><b>Наименование:</b><%= product.title %></br>
+          <b>Опис:</b> <% if product.desc.present? %><span class="oi oi-check" data-container="body" data-toggle="popover" data-placement="right" data-trigger="hover" data-html="true" data-content="<%= product.desc %>"></span><% end %>
+      </br><b>Параметры:</b> <% if product.charact.present? %><span class="oi oi-check" data-container="body" data-toggle="popover" data-placement="right" data-trigger="hover" data-html="true" data-content="<%= product.charact %>"></span><% end %>
+      </br><b>Товар у поставщика</b> <%= link_to '<span class="oi oi-eye"></span>'.html_safe, product.url , target: 'blank' if product.url.present? %>
+      </td>
       <td><% if product.sdesc.present? %><span class="oi oi-check" data-container="body" data-toggle="popover" data-placement="right" data-trigger="hover" data-html="true" data-content="<%= product.sdesc %>"></span><% end %></td>
-      <td class="text-center"><% if product.desc.present? %><span class="oi oi-check" data-container="body" data-toggle="popover" data-placement="right" data-trigger="hover" data-html="true" data-content="<%= product.desc %>"></span><% end %></td>
       <td><% if product.cat %>(<%= product.cat %>)<% end %> <%= product.cattitle %></td>
-      <td><% if product.charact.present? %><span class="oi oi-check" data-container="body" data-toggle="popover" data-placement="right" data-trigger="hover" data-html="true" data-content="<%= product.charact %>"></span><% end %></td>
       <td>ЗЦ1: <%= best_in_place product, :costprice %><br>ЗЦ2: <%= product.costprice2 %></td>
       <td>%: <%= product.pricepropt %><br>Цена: <%= product.optprice %></td>
       <td>%: <%= product.pricepr %><br>Цена: <%= product.price %></td>
       <td class="text-center" data-container="body" data-toggle="popover" data-placement="top" data-trigger="hover" data-html="true" data-content="П1: <%= product.quantity1 %><br>П2: <%= product.quantity2 %>"><%= product.quantity %></td>
       <td class="row ml-0 mr-0">
         <% if product.image %><% product.image.split(' ')[0..3].each do |pict| %>
-        <div class="w-25">
-          <img class="img-thumbnail" src="<%= pict %>">
-        </div>
+        <div class="w-25"><img class="img-thumbnail" src="<%= pict %>"></div>
         <% end %><% end %>
       </td>
       <td><%= product.barcode %></td>
       <td><%= product.brand %></td>
       <td><%= product.weight %></td>
       <td><%= product.skubrand %></td>
-      <td>
-        <% if product.url.present? %><%= link_to 'Товар у поставщика', product.url , target: 'blank' %>
-        <%end%>
-      </td>
       <td><%= link_to '<span class="oi oi-trash"></span>'.html_safe, product, method: :delete, data: { confirm: 'Вы уверенны?' } %></td>
     </tr>
   <% end %>
