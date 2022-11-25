@@ -176,7 +176,6 @@ class Product < ApplicationRecord
   end
 
   def self.vstrade_get_image_desc_by_product(pr, response)
-    url = 'https://www.vstrade.kz/'+ pr.url.split('kz/').last
 
     pr_doc = Nokogiri::HTML(response, nil, Encoding::UTF_8.to_s)
     # pr_doc = Nokogiri::HTML(open(Addressable::URI.parse(url).normalize  , :read_timeout => 50), nil, Encoding::UTF_8.to_s)
@@ -205,7 +204,7 @@ class Product < ApplicationRecord
     clear_proper = Nokogiri::HTML(proper_file)
     properties = clear_proper.text
     properties.split('---').each do |prop|
-      @desc = prop.gsub('Полное описание:', '').squish if prop.include?(':') && prop.include?('Полное описание')
+      # @desc = prop.gsub('Полное описание:', '').squish if prop.include?(':') && prop.include?('Полное описание')
       @barcode = prop.gsub('Штрих код:', '').squish if prop.include?(':') && prop.include?('Штрих код')
       if prop.include?(':') && !prop.include?('Полное описание') && !prop.include?('Бренд') && !prop.include?('Штрих код')
         proper.push(prop.squish)
@@ -219,7 +218,7 @@ class Product < ApplicationRecord
     end
 
     cattitle_file = cat_array.join('/')
-    desc = !pr.desc.present? ? @desc : pr.desc
+    desc = pr_doc.css('.desc').inner_html
 
     brand_file = pr_doc.css('meta[itemprop=brand]')[0]['content'] if pr_doc.css('meta[itemprop=brand]').present?
     brand = !pr.brand.present? ? brand_file : pr.brand
