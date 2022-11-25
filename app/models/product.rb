@@ -218,7 +218,7 @@ class Product < ApplicationRecord
     end
 
     cattitle_file = cat_array.join('/')
-    desc = pr_doc.css('.desc').inner_html
+    desc = pr_doc.css('div.desc').inner_html
 
     brand_file = pr_doc.css('meta[itemprop=brand]')[0]['content'] if pr_doc.css('meta[itemprop=brand]').present?
     brand = !pr.brand.present? ? brand_file : pr.brand
