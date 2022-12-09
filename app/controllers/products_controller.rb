@@ -132,10 +132,10 @@ class ProductsController < ApplicationController
 					if !value.blank?
 					pr.update_attributes(key => value)
             if key.to_s == 'pricepr'
-              Product.update_pricepr(pr.id)
+              pr.update_pricepr
             end
             if key.to_s == 'pricepropt'
-              Product.update_pricepropt(pr.id)
+              pr.update_pricepropt
             end
 					end
 				end

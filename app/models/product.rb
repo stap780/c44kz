@@ -17,15 +17,9 @@ class Product < ApplicationRecord
 
   def self.quantity_search(v)
 		default_v = Product.pluck(:quantity).uniq.sort.last
-		if v == 'all'
-			value = Array(0..default_v)
-		end
-		if v.to_i == 0
-			value = 0
-		end
-		if v != 'all' and v.to_i != 0
-			value = Array(1..default_v)
-		end
+		value = Array(0..default_v) if v == 'all'
+		value = 0 if v.to_i == 0
+		value = Array(1..default_v) if v != 'all' && v.to_i != 0
 	end
 
   def self.get_file
@@ -100,7 +94,6 @@ class Product < ApplicationRecord
     end
 
     puts 'конец обновляем из файла - ' + Time.now.in_time_zone('Moscow').to_s
-    Product.update_quantity
     Product.price_updates
   end
 
@@ -255,35 +248,33 @@ class Product < ApplicationRecord
   end
 
   def self.load_by_api
-    puts 'загружаем данные api - ' + Time.now.in_time_zone('Moscow').to_s
+    puts 'загружаем данные api al-style.kz - ' + Time.now.in_time_zone('Moscow').to_s
 
-    count = Product.product_api_update.size
+    articles =  Product.product_api_update.nil? ? [] : Product.product_api_update.pluck(:sku).reject(&:blank?)
+    count = articles.size
     offset = 0
     while count > 0
       puts 'offset - ' + offset.to_s
-      products = Product.product_api_update.slice(offset.to_s.to_i, 50) # .limit(50).offset("#{offset}")
-      articles = products.nil? ? '' : products.pluck(:sku).join(',')
-      # puts articles
-      if articles.present? && (articles != '')
-        url = 'https://api.al-style.kz/api/element-info?access-token=Py8UvH0yDeHgN0KQ3KTLP2jDEtCR5ijm&article=' + articles + '&additional_fields=barcode,description,brand,properties,detailtext,images,weight,url'
+      search_articles = articles.slice(offset, 50).join(',')
+      if search_articles.present?
+        url = 'https://api.al-style.kz/api/element-info?access-token=Py8UvH0yDeHgN0KQ3KTLP2jDEtCR5ijm&article=' + search_articles + '&additional_fields=barcode,description,brand,properties,detailtext,images,weight,url'
         puts url
         RestClient.get(url) do |response, _request, _result, &block|
           case response.code
           when 200
-            products = JSON.parse(response)
-            products.each do |pr|
-              Product.api_update_product(pr)
+            datas = JSON.parse(response)
+            datas.each do |data_pr|
+              Product.api_update_product(data_pr)
             end
           when 422
-            puts 'error 422 - не добавили клиента'
-            puts response
+            puts 'error 422 - не добавили клиента - '+response.to_s
             break
           when 404
-            puts 'error 404'
+            puts 'error 404 - '+response.to_s
             break
           when 503
             sleep 1
-            puts 'sleep 1 error 503'
+            puts 'sleep 1 error 503 - '+response.to_s
           else
             response.return!(&block)
           end
@@ -291,8 +282,6 @@ class Product < ApplicationRecord
 
         count -= 50
         offset += 50
-        # sleep 0.1
-        # puts 'sleep 0.1'
       else
         break
       end
@@ -300,22 +289,30 @@ class Product < ApplicationRecord
     end
 
     puts 'закончили загружаем данные api - ' + Time.now.in_time_zone('Moscow').to_s
-    Product.set_cattitle
+    # Product.set_cattitle
   end
 
   def self.api_update_product(data)
-    # data = JSON.parse(pr_info)
-    product = Product.find_by_sku(data['article'])
     characts_array = []
+    not_use_keys = ["Не включать в прайс-лист","Дата последнего прихода","Штрихкод","Код","Базовая единица","Короткое наименование","Бренд","Полное наименование","Вес","Артикул-PartNumber","Анонс"]
     data['properties'].each do |k, v|
-      if (k != 'Не включать в прайс-лист') && (k != 'Дата последнего прихода') && (k != 'Штрихкод') && (k != 'Код') && (k != 'Базовая единица') && (k != 'Короткое наименование') && (k != 'Бренд') && (k != 'Полное наименование') && (k != 'Вес') && (k != 'Артикул-PartNumber') && (k != 'Анонс')
-        characts_array.push(k + ' : ' + v.to_s)
-      end
+      characts_array.push(k + ' : ' + v.to_s) if !not_use_keys.include?(k)
     end
     characts = characts_array.join('---')
     images = data['images'].join(' ')
-    product.update_attributes(skubrand: data['article_pn'], barcode: data['barcode'], brand: data['brand'],
-                              desc: data['detailtext'], cat: data['category'], charact: characts, image: images, weight: data['weight'], url: data['url'])
+    api_data = {
+      skubrand: data['article_pn'], 
+      barcode: data['barcode'], 
+      brand: data['brand'],
+      desc: data['detailtext'],
+      cat: data['category'],
+      charact: characts,
+      image: images,
+      weight: data['weight'],
+      url: data['url']
+    }
+    product = Product.find_by_sku(data['article'])
+    product.update_attributes(api_data)
   end
 
   def self.csv_param
@@ -556,23 +553,14 @@ class Product < ApplicationRecord
   end
 
   def self.set_cattitle
-    puts 'проставляем названия категорий - ' + Time.now.in_time_zone('Moscow').to_s
+    puts "проставляем названия категорий - #{Time.now.in_time_zone('Moscow').to_s}"
     url = 'https://api.al-style.kz/api/categories?access-token=Py8UvH0yDeHgN0KQ3KTLP2jDEtCR5ijm'
     resp = RestClient.get(url, accept: :json, content_type: 'application/json')
     cats = JSON.parse(resp)
-    c_a_o_h = []
-    cats.each do |cat|
-      c_a_o_h.push(cat)
-    end
-    puts c_a_o_h.to_s
-    products = Product.where(cattitle: [nil, ''])
+    products = Product.ransack(cattitle_present: false, cat_present: true).result #Product.where(cattitle: [nil, ''])
     products.each do |product|
-      @cat_id = product.cat.to_i
-      puts '@cat_id - ' + @cat_id.to_s
-      puts @cat_id.nil?
-      next unless (@cat_id != 0) && !@cat_id.nil?
 
-      search_cat = c_a_o_h.select { |k, _v| k['id'] == @cat_id }
+      search_cat = cats.select { |k, v| k['id'] == product.cat.to_i }
       puts search_cat.to_s
       next unless search_cat.present?
 
@@ -583,13 +571,13 @@ class Product < ApplicationRecord
         @left = search_cat[0]['left']
         while @left > 0 && @level > 0
           # puts "left - "+@left.to_s
-          a = c_a_o_h.select { |k, _v| k['level'] == @level && k['left'] == @left }
+          a = cats.select { |k, v| k['level'] == @level && k['left'] == @left }
           if a.present?
             # puts a.to_s
             new_name.unshift(a[0]['name'])
             # добавляем название вышестоящей категории к названию этой категории
             if a[0]['level'] == 1
-              break
+              break 
             else
               @level -= 1
               @left = a[0]['left'] - 1
@@ -602,49 +590,17 @@ class Product < ApplicationRecord
       # puts new_name.join('/')
       product.update_attributes(cattitle: new_name.join('/'))
     end
-    puts 'конец проставляем названия категорий - ' + Time.now.in_time_zone('Moscow').to_s
+    puts "конец проставляем названия категорий - #{Time.now.in_time_zone('Moscow').to_s}"
   end
 
   def self.price_updates
     puts 'обновляем цены по процентам по категориям - ' + Time.now.in_time_zone('Moscow').to_s
     products = Product.all.order(:id)
     products.each do |product|
-      Product.update_pricepr(product.id)
-      Product.update_pricepropt(product.id)
+      product.update_pricepr
+      product.update_pricepropt
     end
     puts 'конец обновляем цены по процентам по категориям - ' + Time.now.in_time_zone('Moscow').to_s
-  end
-
-  def self.update_pricepr(pr_id)
-    product = Product.find_by_id(pr_id)
-    cost_price = product.costprice ||= 0
-    if product.pricepr.present?
-      new_price = (cost_price + product.pricepr.to_f / 100 * cost_price).round(-1)
-      product.update_attributes(price: new_price)
-    elsif product.cattitle.present?
-      search_product = Product.where(cattitle: product.cattitle).where.not(pricepr: [nil]).first
-      if search_product.present?
-        product.update_attributes(pricepr: search_product.pricepr)
-        new_price = (cost_price + search_product.pricepr.to_f / 100 * cost_price).round(-1)
-        product.update_attributes(price: new_price)
-      end
-    end
-  end
-
-  def self.update_pricepropt(pr_id)
-    product = Product.find_by_id(pr_id)
-    cost_price = product.costprice ||= 0
-    if product.pricepropt.present?
-      new_optprice = (cost_price + product.pricepropt.to_f / 100 * cost_price).round(-1)
-      product.update_attributes(optprice: new_optprice)
-    elsif product.cattitle.present?
-      search_product = Product.where(cattitle: product.cattitle).where.not(pricepropt: [nil]).first
-      if search_product.present?
-        product.update_attributes(pricepropt: search_product.pricepropt)
-        new_optprice = (cost_price + search_product.pricepropt.to_f / 100 * cost_price).round(-1)
-        product.update_attributes(optprice: new_optprice)
-      end
-    end
   end
 
   def self.insales_param
@@ -690,16 +646,6 @@ class Product < ApplicationRecord
       end
     end
     puts 'finish insales_param'
-  end
-
-  def self.update_quantity
-    products = Product.all
-    products.each do |pr|
-      q1 = pr.quantity1 ||= 0
-      q2 = pr.quantity2 ||= 0
-      pr.quantity = q1 + q2
-      pr.save
-    end
   end
 
   def self.kaspi_xml
@@ -758,6 +704,37 @@ class Product < ApplicationRecord
   #     self.url = self.url.include?('https') ? self.url.gsub('https://vstrade.kz','https://www.vstrade.kz') : self.url.gsub('http://vstrade.kz','https://www.vstrade.kz')
   #   end
   # end
+  def update_pricepr
+    product = self
+    cost_price = product.costprice ||= 0
+    if product.pricepr.present?
+      new_price = (cost_price + product.pricepr.to_f / 100 * cost_price).round(-1)
+      product.update_attributes(price: new_price)
+    elsif product.cattitle.present?
+      search_product = Product.where(cattitle: product.cattitle).where.not(pricepr: [nil]).first
+      if search_product.present?
+        product.update_attributes(pricepr: search_product.pricepr)
+        new_price = (cost_price + search_product.pricepr.to_f / 100 * cost_price).round(-1)
+        product.update_attributes(price: new_price)
+      end
+    end
+  end
+
+  def update_pricepropt
+    product = self
+    cost_price = product.costprice ||= 0
+    if product.pricepropt.present?
+      new_optprice = (cost_price + product.pricepropt.to_f / 100 * cost_price).round(-1)
+      product.update_attributes(optprice: new_optprice)
+    elsif product.cattitle.present?
+      search_product = Product.where(cattitle: product.cattitle).where.not(pricepropt: [nil]).first
+      if search_product.present?
+        product.update_attributes(pricepropt: search_product.pricepropt)
+        new_optprice = (cost_price + search_product.pricepropt.to_f / 100 * cost_price).round(-1)
+        product.update_attributes(optprice: new_optprice)
+      end
+    end
+  end
 
   def update_quantity
     q1 = self.quantity1 ||= 0
