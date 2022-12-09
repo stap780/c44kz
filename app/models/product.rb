@@ -29,7 +29,7 @@ class Product < ApplicationRecord
 
     download = RestClient::Request.execute(method: :get, url: url, raw_response: true)
     if download.code == 200
-      download_path = Rails.public_path.to_s + '/ost.xlsx' #+Date.today.in_time_zone('Moscow').strftime("%d_%m_%Y").to_s+'.xlsx'
+      download_path = Rails.public_path.to_s + '/ost.xlsx'
       IO.copy_stream(download.file.path, download_path)
       Product.open_file(download_path)
     else
@@ -385,7 +385,7 @@ class Product < ApplicationRecord
     addHeaders.each do |addH|
       next unless check_property_use.include?(addH)
 
-      puts 'параметр -' + addH
+      # puts 'параметр -' + addH
       additional_column_names = ['Параметр: ' + addH]
       # Append new column name(s)
       column_names += additional_column_names
