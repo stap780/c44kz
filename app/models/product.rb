@@ -258,12 +258,12 @@ class Product < ApplicationRecord
       search_articles = articles.slice(offset, 50).join(',')
       if search_articles.present?
         url = 'https://api.al-style.kz/api/element-info?access-token=Py8UvH0yDeHgN0KQ3KTLP2jDEtCR5ijm&article=' + search_articles + '&additional_fields=barcode,description,brand,properties,detailtext,images,weight,url'
-        # puts url
+        puts url
         RestClient.get(url) do |response, _request, _result, &block|
           case response.code
           when 200
             datas = JSON.parse(response)
-            if datas['status'] != 'error'
+            if datas.is_a?Array
               datas.each do |data|
                 Product.api_update_product(data)
               end
@@ -287,7 +287,6 @@ class Product < ApplicationRecord
       else
         break
       end
-
     end
 
     puts 'закончили загружаем данные api - ' + Time.now.in_time_zone('Moscow').to_s
