@@ -6,7 +6,7 @@ class Product < ApplicationRecord
   scope :product_cat, -> { order('cattitle ASC').select(:cattitle).uniq }
   scope :product_barcode_nil, -> { where(barcode: [nil, '']).order(:id) }
   scope :product_image_nil, -> { where(image: [nil, '']).order(:id) }
-  scope :product_api_update, -> { product_barcode_nil + product_image_nil }
+  scope :product_api_update, -> { where(barcode: [nil, ''], image: [nil, '']).order(:id)}
   scope :product_for_insales, -> { where('quantity > 0').where.not(price: [nil, 0]).pluck(:id) }
   before_save :normalize_data_white_space
   # before_save :vstrade_url_normalize
@@ -263,8 +263,8 @@ class Product < ApplicationRecord
           case response.code
           when 200
             datas = JSON.parse(response)
-            datas.each do |data_pr|
-              Product.api_update_product(data_pr)
+            datas.each do |data|
+              Product.api_update_product(data) if data['status'] != 'error'
             end
           when 422
             puts 'error 422 - не добавили клиента - '+response.to_s

@@ -85,21 +85,13 @@ class ProductsController < ApplicationController
   end
 
   def get_file
-    if Rails.env.development?
-      Product.get_file
-    else
-      Product.delay.get_file
-    end
+    Rails.env.development? ? Product.get_file : Product.delay.get_file
     flash[:notice] = 'Задача обновления остатков запущена'
     redirect_to products_path
   end
 
   def get_file_vstrade
-    if Rails.env.development?
-      Product.get_file_vstrade
-    else
-      Product.delay.get_file_vstrade
-    end
+    Rails.env.development? ? Product.get_file_vstrade : Product.delay.get_file_vstrade
     flash[:notice] = 'Задача обновления остатков Поставщик 2 запущена'
     redirect_to products_path
   end
@@ -157,41 +149,25 @@ class ProductsController < ApplicationController
   end
 
   def load_by_api
-    if Rails.env.development?
-      Product.load_by_api
-    else
-      Product.delay.load_by_api
-    end
+    Rails.env.development? ? Product.load_by_api : Product.delay.load_by_api
     flash[:notice] = 'Задача обновления по api запущена'
     redirect_to products_path
   end
 
   def csv_param
-    if Rails.env.development?
-      Product.csv_param
-    else
-      Product.delay.csv_param
-    end
+    Rails.env.development? ? Product.csv_param : Product.delay.csv_param
     flash[:notice] = "Запустили"
     redirect_to products_path
   end
 
   def set_cattitle
-    if Rails.env.development?
-      Product.set_cattitle
-    else
-      Product.delay.set_cattitle
-    end
+    Rails.env.development? ? Product.set_cattitle : Product.delay.set_cattitle
     flash[:notice] = "Запустили"
     redirect_to products_path
   end
 
   def insales_param
-    if Rails.env.development?
-      Product.insales_param
-    else
-      Product.delay.insales_param
-    end
+    Rails.env.development? ? Product.insales_param : Product.delay.insales_param
     flash[:notice] = 'Задача обновления параметров по api insales запущена'
     redirect_to products_path
   end
