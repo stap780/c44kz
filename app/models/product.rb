@@ -138,11 +138,11 @@ class Product < ApplicationRecord
   def self.vstrade_get_image_desc
     puts 'обновляем vstrade_get_image_desc - ' + Time.now.in_time_zone('Moscow').to_s
 
-    products = Product.where.not(sku2: [nil, '']).where(image: [nil, '']).order(:id)
+    products = Product.ransack(sku2_present: true, image_present: false).result #Product.where.not(sku2: [nil, '']).where(image: [nil, '']).order(:id)
     products.each do |pr|
       puts 'pr id - ' + pr.id.to_s
       url = 'https://www.vstrade.kz/'+ pr.url.split('kz/').last
-      puts 'url - ' + url.to_s
+      # puts 'url - ' + url.to_s
       pr_url = Addressable::URI.parse(url).normalize.to_s
       RestClient.get(pr_url) do |response, _request, _result, &block|
         case response.code
@@ -250,7 +250,7 @@ class Product < ApplicationRecord
   def self.load_by_api
     puts 'загружаем данные api al-style.kz - ' + Time.now.in_time_zone('Moscow').to_s
 
-    articles =  Product.product_api_update.nil? ? [] : Product.product_api_update.pluck(:sku).reject(&:blank?)
+    articles = Product.product_api_update.nil? ? [] : Product.product_api_update.pluck(:sku).reject(&:blank?)
     count = articles.size
     offset = 0
     while count > 0
@@ -289,7 +289,7 @@ class Product < ApplicationRecord
     end
 
     puts 'закончили загружаем данные api - ' + Time.now.in_time_zone('Moscow').to_s
-    # Product.set_cattitle
+    Product.set_cattitle
   end
 
   def self.api_update_product(data)
@@ -370,7 +370,7 @@ class Product < ApplicationRecord
       end
     end
     addHeaders = vparamHeader.uniq
-    puts 'addHeaders ' + addHeaders.to_s
+    # puts 'addHeaders ' + addHeaders.to_s
     # Load the original CSV file
     rows = CSV.read(file, headers: true).collect do |row|
       row.to_hash
