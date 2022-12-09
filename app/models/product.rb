@@ -258,13 +258,15 @@ class Product < ApplicationRecord
       search_articles = articles.slice(offset, 50).join(',')
       if search_articles.present?
         url = 'https://api.al-style.kz/api/element-info?access-token=Py8UvH0yDeHgN0KQ3KTLP2jDEtCR5ijm&article=' + search_articles + '&additional_fields=barcode,description,brand,properties,detailtext,images,weight,url'
-        puts url
+        # puts url
         RestClient.get(url) do |response, _request, _result, &block|
           case response.code
           when 200
             datas = JSON.parse(response)
-            datas.each do |data|
-              Product.api_update_product(data) if data['status'] != 'error'
+            if datas['status'] != 'error'
+              datas.each do |data|
+                Product.api_update_product(data)
+              end
             end
           when 422
             puts 'error 422 - не добавили клиента - '+response.to_s
