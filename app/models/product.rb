@@ -708,35 +708,21 @@ class Product < ApplicationRecord
   #   end
   # end
   def update_pricepr
-    product = self
-    cost_price = product.costprice ||= 0
-    if product.pricepr.present?
-      new_price = (cost_price + product.pricepr.to_f / 100 * cost_price).round(-1)
-      product.update_attributes(price: new_price)
-    elsif product.cattitle.present?
-      search_product = Product.where(cattitle: product.cattitle).where.not(pricepr: [nil]).first
-      if search_product.present?
-        product.update_attributes(pricepr: search_product.pricepr)
-        new_price = (cost_price + search_product.pricepr.to_f / 100 * cost_price).round(-1)
-        product.update_attributes(price: new_price)
-      end
-    end
+    cost_price = self.costprice ||= 0
+    s_cat_pricepr = self.cattitle.present? ? Product.ransack(cattitle_eq: self.cattitle, pricepr_not_nil: true).result.pluck(:pricepr).uniq.first : nil
+    s_pricepr = self.pricepr.present? ? self.pricepr.to_f : s_cat_pricepr
+    pricepr = s_pricepr.present? ? s_pricepr : nil
+    new_price = (cost_price + pricepr.to_f / 100 * cost_price).round(-1)
+    self.price = new_price
   end
 
   def update_pricepropt
-    product = self
-    cost_price = product.costprice ||= 0
-    if product.pricepropt.present?
-      new_optprice = (cost_price + product.pricepropt.to_f / 100 * cost_price).round(-1)
-      product.update_attributes(optprice: new_optprice)
-    elsif product.cattitle.present?
-      search_product = Product.where(cattitle: product.cattitle).where.not(pricepropt: [nil]).first
-      if search_product.present?
-        product.update_attributes(pricepropt: search_product.pricepropt)
-        new_optprice = (cost_price + search_product.pricepropt.to_f / 100 * cost_price).round(-1)
-        product.update_attributes(optprice: new_optprice)
-      end
-    end
+    cost_price = self.costprice ||= 0
+    s_cat_pricepropt = self.cattitle.present? ? Product.ransack(cattitle_eq: self.cattitle, pricepropt_not_nil: true).result.pluck(:pricepropt).uniq.first : nil
+    s_pricepropt = self.pricepropt.present? ? self.pricepropt.to_f : s_cat_pricepropt
+    pricepropt = s_pricepropt.present? ? s_pricepropt : nil
+    new_optprice = (cost_price + pricepropt.to_f / 100 * cost_price).round(-1)
+    self.optprice = new_optprice
   end
 
   def update_quantity
