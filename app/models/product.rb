@@ -11,6 +11,8 @@ class Product < ApplicationRecord
   before_save :normalize_data_white_space
   # before_save :vstrade_url_normalize
   before_save :update_quantity
+  before_save :update_pricepr
+  before_save :update_pricepropt
   validates :sku, uniqueness: true
 
   # Product.select(:cattitle).uniq.order('cattitle ASC')
