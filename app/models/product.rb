@@ -27,7 +27,7 @@ class Product < ApplicationRecord
   def self.get_file
     puts 'загружаем файл с остатками - ' + Time.now.in_time_zone('Moscow').to_s
 
-    url = 'https://order.al-style.kz/export/Al-Style_price.xlsx'
+    url = 'https://b2bportal.al-style.kz/export/Al-Style_price.xlsx'
 
     download = RestClient::Request.execute(method: :get, url: url, raw_response: true)
     if download.code == 200
